@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TitleBoost AI — Shopify Title Optimizer</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --p-bg: #f1f1f1;
+  --p-surface: #ffffff;
+  --p-surface-2: #f7f7f7;
+  --p-surface-3: #f1f1f1;
+  --p-fill: #303030;
+  --p-fill-2: #616161;
+  --p-fill-3: #8a8a8a;
+  --p-fill-success: #1a9e6a;
+  --p-fill-critical: #c92a2a;
+  --p-fill-magic: #7c3aed;
+  --p-bg-success: #e3f1ec;
+  --p-bg-critical: #ffeaea;
+  --p-bg-warning: #fff3cd;
+  --p-bg-info: #e8f1ff;
+  --p-bg-magic: #f2edff;
+  --p-border: #e0e0e0;
+  --p-border-2: #c9c9c9;
+  --p-border-emphasis: #8a8a8a;
+  --p-border-magic: #7c3aed;
+  --p-text: #303030;
+  --p-text-2: #616161;
+  --p-text-3: #8a8a8a;
+  --p-text-success: #1a7a52;
+  --p-text-critical: #c92a2a;
+  --p-text-warning: #7d5500;
+  --p-text-magic: #4a1fb8;
+  --p-text-inverse: #ffffff;
+  --p-r-sm: 4px;
+  --p-r-md: 8px;
+  --p-r-lg: 12px;
+  --p-r-full: 9999px;
+  --p-shadow: 0 1px 0 rgba(0,0,0,0.05);
+  --p-shadow-md: 0 1px 3px rgba(0,0,0,0.1),0 1px 2px rgba(0,0,0,0.06);
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: var(--p-bg);
+  color: var(--p-text);
+  font-size: 14px;
+  line-height: 1.5;
+  min-height: 100vh;
+}
+
+/* TOP BAR */
+.topbar {
+  background: var(--p-fill);
+  height: 56px;
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  gap: 12px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.topbar-logo {
+  display: flex; align-items: center; gap: 8px;
+  color: var(--p-text-inverse);
+  font-size: 15px; font-weight: 600;
+  text-decoration: none;
+}
+.topbar-logo-icon {
+  width: 28px; height: 28px;
+  background: #96bf48;
+  border-radius: var(--p-r-sm);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px;
+}
+.topbar-divider { width: 1px; height: 20px; background: rgba(255,255,255,0.2); }
+.topbar-store { font-size: 13px; color: rgba(255,255,255,0.75); font-weight: 500; }
+.topbar-spacer { flex: 1; }
+.topbar-pill {
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: var(--p-r-full);
+  padding: 3px 10px;
+  font-size: 12px; font-weight: 500;
+  color: rgba(255,255,255,0.85);
+}
+
+/* FRAME */
+.frame {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  min-height: calc(100vh - 56px);
+}
+
+/* NAV */
+.nav {
+  background: var(--p-surface);
+  border-right: 1px solid var(--p-border);
+  padding: 12px 0;
+  display: flex;
+  flex-direction: column;
+}
+.nav-section {
+  padding: 16px 16px 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--p-text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 16px;
+  font-size: 14px;
+  color: var(--p-text-2);
+  cursor: pointer;
+  border-left: 3px solid transparent;
+  transition: background 0.1s, color 0.1s;
+  text-decoration: none;
+  user-select: none;
+}
+.nav-item:hover { background: var(--p-surface-2); color: var(--p-text); }
+.nav-item.active {
+  background: var(--p-bg-magic);
+  color: var(--p-text-magic);
+  border-left-color: var(--p-fill-magic);
+  font-weight: 500;
+}
+.nav-sep { height: 1px; background: var(--p-border); margin: 8px 0; }
+.nav-spacer { flex: 1; }
+.usage-box {
+  margin: 12px;
+  background: var(--p-surface-2);
+  border: 1px solid var(--p-border);
+  border-radius: var(--p-r-md);
+  padding: 12px;
+}
+.usage-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.usage-title { font-size: 12px; font-weight: 600; color: var(--p-text); }
+.usage-count { font-size: 12px; color: var(--p-text-2); }
+.progress-bg { height: 6px; background: var(--p-border); border-radius: var(--p-r-full); margin-bottom: 12px; }
+.progress-fill { height: 6px; background: var(--p-fill-magic); border-radius: var(--p-r-full); width: 36%; }
+.btn-upgrade {
+  width: 100%;
+  background: var(--p-fill);
+  color: var(--p-text-inverse);
+  border: none;
+  border-radius: var(--p-r-md);
+  padding: 7px 12px;
+  font-size: 12px; font-family: inherit; font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.btn-upgrade:hover { background: #1a1a1a; }
+
+/* MAIN */
+.main { padding: 24px 32px; overflow-x: hidden; min-width: 0; }
+
+.page-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 20px; gap: 16px; }
+.page-title { font-size: 20px; font-weight: 600; letter-spacing: -0.2px; margin-bottom: 2px; }
+.page-sub { font-size: 14px; color: var(--p-text-2); }
+
+/* BUTTONS */
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 14px;
+  border-radius: var(--p-r-md);
+  font-size: 14px; font-family: inherit; font-weight: 500;
+  cursor: pointer; border: 1px solid transparent;
+  transition: all 0.12s; white-space: nowrap;
+  line-height: 1.4; text-decoration: none;
+}
+.btn-primary {
+  background: var(--p-fill);
+  color: var(--p-text-inverse);
+  border-color: var(--p-fill);
+  box-shadow: var(--p-shadow), inset 0 -1px 0 rgba(0,0,0,0.2);
+}
+.btn-primary:hover { background: #1a1a1a; }
+.btn-primary:disabled { background: var(--p-fill-3); border-color: var(--p-fill-3); cursor: not-allowed; box-shadow: none; }
+.btn-secondary {
+  background: var(--p-surface);
+  color: var(--p-text);
+  border-color: var(--p-border-2);
+  box-shadow: var(--p-shadow), inset 0 -1px 0 rgba(0,0,0,0.08);
+}
+.btn-secondary:hover { background: var(--p-surface-2); }
+.btn-magic {
+  background: var(--p-fill-magic);
+  color: #fff;
+  border-color: var(--p-fill-magic);
+  box-shadow: var(--p-shadow), inset 0 -1px 0 rgba(0,0,0,0.2);
+}
+.btn-magic:hover { background: #6d28d9; }
+.btn-magic:disabled { background: #c4b5fd; border-color: #c4b5fd; cursor: not-allowed; box-shadow: none; }
+
+/* BANNER */
+.banner {
+  border-radius: var(--p-r-md);
+  padding: 14px 16px;
+  margin-bottom: 20px;
+  display: flex; align-items: center; gap: 12px;
+  border: 1px solid;
+  flex-wrap: wrap;
+}
+.banner-warning { background: var(--p-bg-warning); border-color: #e07d00; }
+.banner-title { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
+.banner-sub { font-size: 13px; color: var(--p-text-2); }
+.banner-input {
+  background: var(--p-surface);
+  border: 1px solid var(--p-border-2);
+  border-radius: var(--p-r-sm);
+  padding: 6px 10px;
+  font-size: 13px; font-family: 'SF Mono','Fira Code',monospace;
+  color: var(--p-text); outline: none;
+  min-width: 220px;
+  transition: border-color 0.15s;
+}
+.banner-input:focus { border-color: #005bd3; box-shadow: 0 0 0 2px rgba(0,91,211,0.2); }
+.banner-close {
+  background: none; border: none; cursor: pointer;
+  font-size: 18px; color: var(--p-text-2);
+  padding: 2px 6px; border-radius: var(--p-r-sm);
+  transition: background 0.1s; line-height: 1;
+}
+.banner-close:hover { background: rgba(0,0,0,0.07); }
+
+/* STATS */
+.stats-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; margin-bottom: 20px; }
+.stat-card {
+  background: var(--p-surface);
+  border: 1px solid var(--p-border);
+  border-radius: var(--p-r-lg);
+  box-shadow: var(--p-shadow);
+  padding: 16px 20px;
+}
+.stat-label { font-size: 11px; font-weight: 600; color: var(--p-text-3); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; }
+.stat-value { font-size: 28px; font-weight: 600; letter-spacing: -1px; line-height: 1; margin-bottom: 4px; }
+.stat-sub { font-size: 12px; color: var(--p-text-2); }
+
+/* FILTERS */
+.filters {
+  background: var(--p-surface);
+  border: 1px solid var(--p-border);
+  border-radius: var(--p-r-lg);
+  box-shadow: var(--p-shadow);
+  padding: 12px 16px;
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 2px; flex-wrap: wrap;
+}
+.search-wrap { position: relative; flex: 1; min-width: 180px; }
+.search-wrap input {
+  width: 100%;
+  background: var(--p-surface-2);
+  border: 1px solid var(--p-border-2);
+  border-radius: var(--p-r-sm);
+  padding: 7px 10px 7px 30px;
+  font-size: 14px; font-family: inherit;
+  color: var(--p-text); outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.search-wrap input:focus { border-color: #005bd3; box-shadow: 0 0 0 2px rgba(0,91,211,0.2); background: var(--p-surface); }
+.search-icon { position: absolute; left: 9px; top: 50%; transform: translateY(-50%); color: var(--p-text-3); font-size: 13px; pointer-events: none; }
+.p-select {
+  background: var(--p-surface);
+  border: 1px solid var(--p-border-2);
+  border-radius: var(--p-r-sm);
+  padding: 7px 26px 7px 10px;
+  font-size: 14px; font-family: inherit;
+  color: var(--p-text); outline: none; cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7' viewBox='0 0 10 7'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23616161' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  transition: border-color 0.15s;
+}
+.p-select:focus { border-color: #005bd3; box-shadow: 0 0 0 2px rgba(0,91,211,0.2); }
+.selected-pill {
+  font-size: 12px; font-weight: 500;
+  color: var(--p-text-magic);
+  background: var(--p-bg-magic);
+  padding: 3px 10px;
+  border-radius: var(--p-r-full);
+  display: none;
+}
+
+/* TABLE */
+.table-wrap {
+  background: var(--p-surface);
+  border: 1px solid var(--p-border);
+  border-radius: var(--p-r-lg);
+  box-shadow: var(--p-shadow);
+  overflow: hidden;
+  margin-bottom: 24px;
+}
+table { width: 100%; border-collapse: collapse; }
+thead tr { background: var(--p-surface-2); border-bottom: 1px solid var(--p-border); }
+th {
+  text-align: left;
+  padding: 10px 16px;
+  font-size: 11px; font-weight: 600;
+  color: var(--p-text-2);
+  text-transform: uppercase; letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+th:first-child { width: 44px; padding-right: 0; }
+tbody tr { border-bottom: 1px solid var(--p-border); transition: background 0.1s; }
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: var(--p-surface-2); }
+tbody tr.selected { background: var(--p-bg-magic); }
+td { padding: 12px 16px; vertical-align: middle; }
+td:first-child { padding-right: 0; }
+input[type="checkbox"] { width: 15px; height: 15px; accent-color: var(--p-fill-magic); cursor: pointer; }
+
+.product-cell { display: flex; align-items: center; gap: 12px; }
+.product-thumb {
+  width: 40px; height: 40px;
+  border-radius: var(--p-r-sm);
+  background: var(--p-surface-2);
+  border: 1px solid var(--p-border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; flex-shrink: 0;
+}
+.product-name { font-size: 14px; font-weight: 500; color: var(--p-text); }
+.product-sku { font-size: 12px; color: var(--p-text-2); font-family: 'SF Mono',monospace; }
+.title-cell { font-size: 13px; color: var(--p-text-2); max-width: 280px; line-height: 1.4; }
+
+/* Badges */
+.badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 2px 8px;
+  border-radius: var(--p-r-full);
+  font-size: 12px; font-weight: 500; line-height: 1.6;
+}
+.badge::before { content: ''; width: 6px; height: 6px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+.badge-success { background: var(--p-bg-success); color: var(--p-text-success); }
+.badge-success::before { background: var(--p-fill-success); }
+.badge-default { background: var(--p-surface-2); color: var(--p-text-2); border: 1px solid var(--p-border); }
+.badge-default::before { background: var(--p-fill-3); }
+.badge-magic { background: var(--p-bg-magic); color: var(--p-text-magic); }
+.badge-magic::before { background: var(--p-fill-magic); }
+
+.char-tag {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: var(--p-r-full);
+  font-size: 12px; font-weight: 500; font-family: monospace;
+}
+.char-ok { background: var(--p-bg-success); color: var(--p-text-success); }
+.char-warn { background: var(--p-bg-warning); color: var(--p-text-warning); }
+.char-bad { background: var(--p-bg-critical); color: var(--p-text-critical); }
+
+.row-btn {
+  background: none; border: 1px solid var(--p-border-2);
+  border-radius: var(--p-r-sm);
+  padding: 5px 12px;
+  font-size: 13px; font-family: inherit; font-weight: 500;
+  color: var(--p-text); cursor: pointer;
+  transition: background 0.1s, border-color 0.1s;
+}
+.row-btn:hover { background: var(--p-surface-2); border-color: var(--p-border-emphasis); }
+
+/* PAGINATION */
+.pagination {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 16px;
+  border-top: 1px solid var(--p-border);
+  background: var(--p-surface-2);
+}
+.pg-info { font-size: 13px; color: var(--p-text-2); }
+.pg-btns { display: flex; gap: 4px; }
+.pg-btn {
+  min-width: 32px; height: 32px;
+  border: 1px solid var(--p-border-2);
+  border-radius: var(--p-r-sm);
+  background: var(--p-surface);
+  font-size: 13px; font-family: inherit;
+  color: var(--p-text); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  padding: 0 6px; transition: background 0.1s;
+}
+.pg-btn:hover { background: var(--p-surface-2); }
+.pg-btn.active { background: var(--p-fill); color: #fff; border-color: var(--p-fill); }
+
+/* MODAL */
+.modal-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.4); z-index: 200;
+  align-items: center; justify-content: center; padding: 24px;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: var(--p-surface);
+  border-radius: var(--p-r-lg);
+  width: 100%; max-width: 800px;
+  max-height: 90vh;
+  display: flex; flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.18);
+}
+.modal-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--p-border);
+  display: flex; align-items: center; justify-content: space-between;
+  flex-shrink: 0;
+}
+.modal-title { font-size: 16px; font-weight: 600; }
+.modal-close {
+  width: 32px; height: 32px;
+  border: 1px solid var(--p-border-2);
+  border-radius: var(--p-r-sm);
+  background: var(--p-surface);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; color: var(--p-text-2);
+  transition: background 0.1s;
+}
+.modal-close:hover { background: var(--p-surface-2); }
+.modal-body { padding: 20px 24px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 16px; }
+.modal-footer {
+  padding: 14px 24px;
+  border-top: 1px solid var(--p-border);
+  display: flex; align-items: center; justify-content: flex-end; gap: 10px;
+  flex-shrink: 0; background: var(--p-surface-2);
+}
+
+/* RESULT CARD */
+.result-card { border: 1px solid var(--p-border); border-radius: var(--p-r-md); overflow: hidden; }
+.result-header {
+  background: var(--p-surface-2);
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--p-border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.result-prod { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 500; }
+.result-sku {
+  font-family: monospace; font-size: 12px; color: var(--p-text-2);
+  background: var(--p-surface); border: 1px solid var(--p-border);
+  border-radius: 3px; padding: 1px 6px;
+}
+.result-body { padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+
+.compare-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.compare-box { border-radius: var(--p-r-sm); padding: 12px; }
+.compare-original { background: var(--p-surface-2); border: 1px solid var(--p-border); }
+.compare-ai { background: var(--p-bg-magic); border: 1px solid var(--p-border-magic); }
+.compare-label {
+  font-size: 11px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px;
+}
+.compare-original .compare-label { color: var(--p-text-2); }
+.compare-ai .compare-label { color: var(--p-text-magic); }
+.compare-text { font-size: 14px; color: var(--p-text); line-height: 1.4; }
+.compare-ai .compare-text { color: var(--p-text-magic); }
+.compare-chars { font-size: 12px; margin-top: 4px; color: var(--p-text-2); font-family: monospace; }
+
+.field-group { display: flex; flex-direction: column; gap: 4px; }
+.field-label { font-size: 11px; font-weight: 600; color: var(--p-text-2); text-transform: uppercase; letter-spacing: 0.05em; }
+.text-input {
+  width: 100%;
+  border: 1px solid var(--p-border-2);
+  border-radius: var(--p-r-sm);
+  padding: 8px 10px;
+  font-size: 14px; font-family: inherit;
+  color: var(--p-text); background: var(--p-surface); outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.text-input:focus { border-color: #005bd3; box-shadow: 0 0 0 2px rgba(0,91,211,0.2); }
+.field-hint { font-size: 12px; color: var(--p-text-2); }
+
+.seo-value {
+  background: var(--p-bg-magic);
+  border: 1px solid var(--p-border-magic);
+  border-radius: var(--p-r-sm);
+  padding: 8px 10px;
+  font-size: 14px; color: var(--p-text-magic); line-height: 1.5;
+}
+.keyword-tag {
+  display: inline-block;
+  background: var(--p-surface-2); border: 1px solid var(--p-border);
+  border-radius: var(--p-r-full);
+  padding: 2px 10px; font-size: 12px; color: var(--p-text-2); margin: 2px;
+}
+
+.apply-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding-top: 10px; border-top: 1px solid var(--p-border); flex-wrap: wrap;
+}
+.apply-hint { font-size: 12px; color: var(--p-text-2); }
+
+/* LOADING */
+.loading-card {
+  border: 1px solid var(--p-border); border-radius: var(--p-r-md);
+  padding: 16px; display: flex; align-items: center; gap: 12px;
+}
+.spinner {
+  width: 20px; height: 20px;
+  border: 2px solid var(--p-border);
+  border-top-color: var(--p-fill-magic);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite; flex-shrink: 0;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-text { font-size: 14px; color: var(--p-text-2); }
+.loading-text strong { color: var(--p-text); font-weight: 500; }
+
+/* TOAST */
+.toast-wrap { position: fixed; bottom: 24px; right: 24px; z-index: 300; display: flex; flex-direction: column; gap: 8px; }
+.toast {
+  display: flex; align-items: center; gap: 8px;
+  padding: 12px 16px; border-radius: var(--p-r-md);
+  font-size: 14px; font-weight: 500;
+  box-shadow: var(--p-shadow-md);
+  animation: toastIn 0.2s ease; max-width: 360px;
+}
+.toast-success { background: #1a4731; color: #fff; }
+.toast-error { background: #7b1111; color: #fff; }
+.toast-default { background: var(--p-fill); color: #fff; }
+@keyframes toastIn { from { transform: translateY(10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+/* EMPTY */
+.empty { padding: 48px 24px; text-align: center; color: var(--p-text-2); }
+.empty-icon { font-size: 36px; margin-bottom: 12px; }
+.empty-title { font-size: 16px; font-weight: 600; color: var(--p-text); margin-bottom: 4px; }
+
+@media (max-width: 860px) {
+  .frame { grid-template-columns: 1fr; }
+  .nav { display: none; }
+  .stats-grid { grid-template-columns: 1fr 1fr; }
+  .compare-grid { grid-template-columns: 1fr; }
+  .main { padding: 16px; }
+}
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<header class="topbar">
+  <div class="topbar-logo">
+    <div class="topbar-logo-icon">🛍</div>
+    TitleBoost AI
+  </div>
+  <div class="topbar-divider"></div>
+  <div class="topbar-store">demo-store.myshopify.com</div>
+  <div class="topbar-spacer"></div>
+  <div class="topbar-pill">Free Plan</div>
+</header>
+
+<div class="frame">
+  <!-- NAV -->
+  <nav class="nav">
+    <div class="nav-section">AI Tools</div>
+    <div class="nav-item active"><span>✦</span> Title Optimizer</div>
+    <div class="nav-item"><span>📝</span> SEO Meta Editor</div>
+    <div class="nav-item"><span>🏷</span> Tag Suggester</div>
+    <div class="nav-sep"></div>
+    <div class="nav-section">Reports</div>
+    <div class="nav-item"><span>📊</span> Analytics</div>
+    <div class="nav-item"><span>📈</span> SEO Score</div>
+    <div class="nav-sep"></div>
+    <div class="nav-section">Settings</div>
+    <div class="nav-item"><span>🔑</span> API Keys</div>
+    <div class="nav-item"><span>⚙️</span> Preferences</div>
+    <div class="nav-item"><span>📦</span> Billing</div>
+    <div class="nav-spacer"></div>
+    <div class="usage-box">
+      <div class="usage-row">
+        <span class="usage-title">Monthly usage</span>
+        <span class="usage-count">18 / 50</span>
+      </div>
+      <div class="progress-bg"><div class="progress-fill"></div></div>
+      <button class="btn-upgrade" onclick="showToast('Opening billing…')">Upgrade to Unlimited</button>
+    </div>
+  </nav>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- BANNER -->
+    <div class="banner banner-warning" id="apiBanner">
+      <div style="flex:1;min-width:200px;">
+        <div class="banner-title">Claude API key required</div>
+        <div class="banner-sub">Enter your Anthropic key to enable AI optimization — stored in this session only.</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-shrink:0;flex-wrap:wrap;">
+        <input class="banner-input" type="password" id="apiKeyInput" placeholder="sk-ant-api03-…" />
+        <button class="btn btn-secondary" onclick="saveApiKey()" style="padding:6px 12px;font-size:13px;">Save key</button>
+      </div>
+      <button class="banner-close" onclick="document.getElementById('apiBanner').style.display='none'">×</button>
+    </div>
+
+    <!-- PAGE HEADER -->
+    <div class="page-header">
+      <div>
+        <div class="page-title">Title Optimizer</div>
+        <div class="page-sub">Select products and let AI rewrite their titles to improve SEO and conversions</div>
+      </div>
+      <button class="btn btn-magic" id="optimizeBtn" onclick="openOptimizeModal()" disabled>✦ Optimize selected</button>
+    </div>
+
+    <!-- STATS -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Total products</div>
+        <div class="stat-value">142</div>
+        <div class="stat-sub">In your store</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Optimized</div>
+        <div class="stat-value" style="color:var(--p-text-success);">18</div>
+        <div class="stat-sub">Titles updated this month</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Avg. title length</div>
+        <div class="stat-value" style="color:var(--p-text-warning);">78</div>
+        <div class="stat-sub">chars — above 70 recommended</div>
+      </div>
+    </div>
+
+    <!-- FILTERS -->
+    <div class="filters">
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input type="text" placeholder="Search products…" oninput="filterProducts(this.value)" />
+      </div>
+      <select class="p-select" onchange="filterByStatus(this.value)">
+        <option value="">All statuses</option>
+        <option value="active">Active</option>
+        <option value="draft">Draft</option>
+        <option value="optimized">Optimized</option>
+      </select>
+      <select class="p-select">
+        <option>All collections</option>
+        <option>Electronics</option>
+        <option>Apparel</option>
+        <option>Home &amp; Living</option>
+      </select>
+      <div class="selected-pill" id="selectedPill">0 selected</div>
+    </div>
+
+    <!-- TABLE -->
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th><input type="checkbox" id="selectAll" onchange="toggleAll(this.checked)" /></th>
+            <th>Product</th>
+            <th>Current title</th>
+            <th>Chars</th>
+            <th>Status</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="productTable"></tbody>
+      </table>
+      <div class="pagination">
+        <span class="pg-info">Showing 1–8 of 12 products</span>
+        <div class="pg-btns">
+          <button class="pg-btn">←</button>
+          <button class="pg-btn active">1</button>
+          <button class="pg-btn">2</button>
+          <button class="pg-btn">→</button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="optimizeModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modalTitle">AI title optimization</div>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-secondary" id="regenBtn" onclick="regenerateAll()" style="display:none;">↺ Regenerate all</button>
+      <button class="btn btn-magic" id="applyAllBtn" onclick="applyAll()" style="display:none;">✓ Apply all to Shopify</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script>
+const PRODUCTS = [
+  {id:1,name:"BT-900X",title:"Wireless Headphones Black 2024 Model Noise Cancelling Over Ear Premium",sku:"HP-001",emoji:"🎧",status:"active",optimized:false},
+  {id:2,name:"CoolBreeze X3",title:"Portable Air Conditioner Fan Humidifier Evaporative Desktop USB White",sku:"AC-220",emoji:"🌀",status:"active",optimized:false},
+  {id:3,name:"Runner Pro 12",title:"Running Shoes Men's Lightweight Breathable Sport Athletic Gym 2024",sku:"SH-412",emoji:"👟",status:"active",optimized:true},
+  {id:4,name:"SlimFit Backpack",title:"Laptop Backpack 15.6 Inch Waterproof USB Charging School Travel Business",sku:"BP-055",emoji:"🎒",status:"draft",optimized:false},
+  {id:5,name:"OptiCam HD",title:"Security Camera 1080P Outdoor Wireless WiFi Night Vision IP Camera",sku:"CM-199",emoji:"📷",status:"active",optimized:false},
+  {id:6,name:"SteelMug Pro",title:"Insulated Travel Coffee Mug 20oz Stainless Steel Leak Proof Car Cup",sku:"MG-033",emoji:"☕",status:"active",optimized:true},
+  {id:7,name:"NanoWatch S7",title:"Smart Watch Men Women Fitness Tracker Heart Rate Blood Pressure Monitor",sku:"WA-771",emoji:"⌚",status:"active",optimized:false},
+  {id:8,name:"FlexiDesk",title:"Standing Desk Converter Adjustable Height Sit Stand Workstation Large",sku:"DS-884",emoji:"🖥️",status:"draft",optimized:false},
+];
+
+let selected=new Set(),apiKey='',generatedResults={},filteredProducts=[...PRODUCTS],statusFilter='';
+
+function cc(n){return n<=60?'char-ok':n<=70?'char-warn':'char-bad';}
+
+function renderTable(){
+  const tb=document.getElementById('productTable');
+  tb.innerHTML='';
+  if(!filteredProducts.length){
+    tb.innerHTML=`<tr><td colspan="6"><div class="empty"><div class="empty-icon">🔍</div><div class="empty-title">No products found</div><div>Try adjusting your search or filters</div></div></td></tr>`;
+    return;
+  }
+  filteredProducts.forEach(p=>{
+    const chars=p.title.length;
+    const badge=p.optimized?`<span class="badge badge-magic">Optimized</span>`:p.status==='active'?`<span class="badge badge-success">Active</span>`:`<span class="badge badge-default">Draft</span>`;
+    const tr=document.createElement('tr');
+    if(selected.has(p.id))tr.classList.add('selected');
+    tr.innerHTML=`
+      <td><input type="checkbox" ${selected.has(p.id)?'checked':''} onchange="toggleSelect(${p.id},this.checked)"/></td>
+      <td><div class="product-cell"><div class="product-thumb">${p.emoji}</div><div><div class="product-name">${p.name}</div><div class="product-sku">${p.sku}</div></div></div></td>
+      <td class="title-cell">${p.title}</td>
+      <td><span class="char-tag ${cc(chars)}">${chars}</span></td>
+      <td>${badge}</td>
+      <td><button class="row-btn" onclick="openSingleOptimize(${p.id})">Optimize</button></td>`;
+    tb.appendChild(tr);
+  });
+}
+
+function toggleSelect(id,checked){if(checked)selected.add(id);else selected.delete(id);updateUI();renderTable();}
+function toggleAll(checked){filteredProducts.forEach(p=>checked?selected.add(p.id):selected.delete(p.id));updateUI();renderTable();}
+function updateUI(){
+  const n=selected.size,btn=document.getElementById('optimizeBtn'),pill=document.getElementById('selectedPill');
+  btn.disabled=n===0;
+  if(n>0){pill.style.display='inline-flex';pill.textContent=`${n} selected`;btn.textContent=`✦ Optimize ${n} selected`;}
+  else{pill.style.display='none';btn.textContent='✦ Optimize selected';}
+}
+function filterProducts(q){
+  const s=q.toLowerCase();
+  filteredProducts=PRODUCTS.filter(p=>(!statusFilter||(statusFilter==='optimized'?p.optimized:p.status===statusFilter))&&(p.name.toLowerCase().includes(s)||p.title.toLowerCase().includes(s)||p.sku.toLowerCase().includes(s)));
+  renderTable();
+}
+function filterByStatus(v){statusFilter=v;filteredProducts=PRODUCTS.filter(p=>!v||(v==='optimized'?p.optimized:p.status===v));renderTable();}
+function saveApiKey(){apiKey=document.getElementById('apiKeyInput').value.trim();if(apiKey){document.getElementById('apiBanner').style.display='none';showToast('API key saved — ready to optimize!','success');}}
+function openOptimizeModal(){if(!selected.size)return;showOptimizeModal(PRODUCTS.filter(p=>selected.has(p.id)));}
+function openSingleOptimize(id){showOptimizeModal([PRODUCTS.find(x=>x.id===id)]);}
+
+function showOptimizeModal(products){
+  generatedResults={};
+  document.getElementById('modalTitle').textContent=`AI title optimization — ${products.length} product${products.length>1?'s':''}`;
+  const body=document.getElementById('modalBody');
+  body.innerHTML='';
+  document.getElementById('applyAllBtn').style.display='none';
+  document.getElementById('regenBtn').style.display='none';
+  document.getElementById('optimizeModal').classList.add('open');
+
+  if(!apiKey){
+    body.innerHTML=`<div style="text-align:center;padding:40px 16px;">
+      <div style="font-size:40px;margin-bottom:16px;">🔑</div>
+      <div style="font-size:16px;font-weight:600;margin-bottom:8px;">API key required</div>
+      <div style="font-size:14px;color:var(--p-text-2);margin-bottom:20px;">Enter your Anthropic API key to enable AI optimization.</div>
+      <div style="display:flex;gap:8px;max-width:420px;margin:0 auto;">
+        <input class="text-input" type="password" id="modalApiKey" placeholder="sk-ant-api03-…" style="font-family:monospace;font-size:13px;"/>
+        <button class="btn btn-magic" onclick="saveApiKeyModal()">Save &amp; optimize</button>
+      </div>
+      <p style="font-size:12px;color:var(--p-text-2);margin-top:12px;">Stored in this session only — never sent to our servers.</p>
+    </div>`;
+    return;
+  }
+
+  products.forEach(p=>{
+    const card=document.createElement('div');
+    card.className='loading-card';card.id=`card-${p.id}`;
+    card.innerHTML=`<div class="spinner"></div><div class="loading-text">Optimizing title for <strong>${p.name}</strong>…</div>`;
+    body.appendChild(card);
+  });
+
+  let done=0;
+  products.forEach(p=>{
+    generateTitle(p).then(result=>{
+      generatedResults[p.id]=result;renderResultCard(p,result);done++;
+      if(done===products.length){document.getElementById('applyAllBtn').style.display='inline-flex';document.getElementById('regenBtn').style.display='inline-flex';}
+    });
+  });
+}
+
+function saveApiKeyModal(){
+  apiKey=document.getElementById('modalApiKey').value.trim();
+  if(!apiKey)return;
+  document.getElementById('apiBanner').style.display='none';
+  const modal=document.getElementById('optimizeModal');
+  modal.classList.remove('open');setTimeout(()=>modal.classList.add('open'),80);
+  openOptimizeModal();
+}
+
+async function generateTitle(product){
+  const prompt=`You are an expert Shopify SEO and conversion specialist.\n\nRewrite this product title to be:\n1. Compelling and benefit-focused\n2. SEO-optimized with natural keywords\n3. Under 70 characters (ideally 50-65)\n4. Clear and easy to read\n\nAlso suggest a meta title (under 60 chars) and meta description (under 160 chars).\n\nOriginal title: "${product.title}"\nProduct SKU: ${product.sku}\n\nRespond ONLY in this JSON format (no markdown, no preamble):\n{"optimized_title":"...","meta_title":"...","meta_description":"...","keywords":["k1","k2","k3"]}`;
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:512,messages:[{role:'user',content:prompt}]})});
+    const data=await res.json();
+    const text=data.content?.[0]?.text||'{}';
+    return JSON.parse(text.replace(/```json|```/g,'').trim());
+  }catch(e){return{optimized_title:"Error generating — check API key",meta_title:"",meta_description:"",keywords:[],error:true};}
+}
+
+function renderResultCard(product,result){
+  const card=document.getElementById(`card-${product.id}`);
+  const origChars=product.title.length,newChars=(result.optimized_title||'').length;
+  card.className='result-card';
+  card.innerHTML=`
+    <div class="result-header">
+      <div class="result-prod"><span>${product.emoji}</span><span>${product.name}</span><span class="result-sku">${product.sku}</span></div>
+      <span class="char-tag ${cc(newChars)}">${newChars} chars</span>
+    </div>
+    <div class="result-body">
+      <div class="compare-grid">
+        <div class="compare-box compare-original">
+          <div class="compare-label">Original</div>
+          <div class="compare-text">${product.title}</div>
+          <div class="compare-chars">${origChars} characters</div>
+        </div>
+        <div class="compare-box compare-ai">
+          <div class="compare-label">AI suggestion</div>
+          <div class="compare-text">${result.optimized_title||'—'}</div>
+          <div class="compare-chars">${newChars} characters</div>
+        </div>
+      </div>
+      <div class="field-group">
+        <div class="field-label">Edit before applying</div>
+        <input class="text-input" type="text" id="edit-${product.id}" value="${(result.optimized_title||'').replace(/"/g,'&quot;')}" maxlength="70"/>
+        <div class="field-hint" id="editcount-${product.id}">${newChars}/70 characters</div>
+      </div>
+      ${result.meta_title?`
+      <div class="field-group"><div class="field-label">Meta title</div><div class="seo-value">${result.meta_title}</div></div>
+      <div class="field-group"><div class="field-label">Meta description</div><div class="seo-value">${result.meta_description}</div></div>`:''}
+      ${result.keywords&&result.keywords.length?`<div class="field-group"><div class="field-label">Keywords</div><div>${result.keywords.map(k=>`<span class="keyword-tag">${k}</span>`).join('')}</div></div>`:''}
+      <div class="apply-row">
+        <div class="apply-hint">Updates product title via Shopify Admin API</div>
+        <button class="btn btn-primary" id="apply-${product.id}" onclick="applySingle(${product.id})">✓ Apply to Shopify</button>
+      </div>
+    </div>`;
+  const inp=document.getElementById(`edit-${product.id}`),cnt=document.getElementById(`editcount-${product.id}`);
+  inp.addEventListener('input',()=>{
+    const n=inp.value.length;cnt.textContent=`${n}/70 characters`;
+    cnt.style.color=n>70?'var(--p-text-critical)':n>60?'var(--p-text-warning)':'var(--p-text-2)';
+    generatedResults[product.id]._editedTitle=inp.value;
+  });
+}
+
+function applySingle(id){
+  const btn=document.getElementById(`apply-${id}`),inp=document.getElementById(`edit-${id}`);
+  const title=inp?inp.value:(generatedResults[id]?.optimized_title||'');
+  btn.disabled=true;btn.textContent='Applying…';
+  setTimeout(()=>{
+    const p=PRODUCTS.find(x=>x.id===id);if(p){p.title=title;p.optimized=true;}
+    btn.textContent='✓ Applied!';showToast(`"${title}" applied to Shopify!`,'success');renderTable();
+  },1200);
+}
+function applyAll(){
+  const btn=document.getElementById('applyAllBtn');btn.disabled=true;btn.textContent='Applying all…';
+  document.querySelectorAll('[id^="apply-"]').forEach(b=>{if(!b.disabled)b.click();});
+  setTimeout(()=>{closeModal();showToast('All titles applied to Shopify!','success');},1800);
+}
+function regenerateAll(){
+  const products=PRODUCTS.filter(p=>generatedResults[p.id]!==undefined);
+  generatedResults={};document.getElementById('applyAllBtn').style.display='none';document.getElementById('regenBtn').style.display='none';
+  const body=document.getElementById('modalBody');body.innerHTML='';
+  products.forEach(p=>{const c=document.createElement('div');c.className='loading-card';c.id=`card-${p.id}`;c.innerHTML=`<div class="spinner"></div><div class="loading-text">Regenerating for <strong>${p.name}</strong>…</div>`;body.appendChild(c);});
+  let done=0;
+  products.forEach(p=>{generateTitle(p).then(r=>{generatedResults[p.id]=r;renderResultCard(p,r);done++;if(done===products.length){document.getElementById('applyAllBtn').style.display='inline-flex';document.getElementById('regenBtn').style.display='inline-flex';}});});
+}
+function closeModal(){document.getElementById('optimizeModal').classList.remove('open');}
+function showToast(msg,type='default'){
+  const wrap=document.getElementById('toastWrap'),t=document.createElement('div');
+  t.className=`toast toast-${type}`;
+  t.innerHTML=`<span>${type==='success'?'✓':type==='error'?'✕':'ℹ'}</span><span>${msg}</span>`;
+  wrap.appendChild(t);setTimeout(()=>t.remove(),3800);
+}
+document.getElementById('optimizeModal').addEventListener('click',function(e){if(e.target===this)closeModal();});
+renderTable();
+</script>
+</body>
+</html>
+
