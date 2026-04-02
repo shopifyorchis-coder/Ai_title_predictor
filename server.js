@@ -1,6 +1,7 @@
 const express = require('express');
 const path = require('path');
 const app = express();
+require('dotenv').config();
 
 app.use(express.static(__dirname));
 
@@ -8,8 +9,11 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-app.listen(3000, () => {
-  console.log('TitleBoost running at http://localhost:3000');
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`TitleBoost running at http://localhost:${PORT}`);
+  console.log(`Shopify API Key loaded: ${process.env.SHOPIFY_API_KEY ? '✅ Yes' : '❌ Missing'}`);
+  console.log(`OpenAI Key loaded: ${process.env.OPENAI_API_KEY ? '✅ Yes' : '❌ Missing'}`);
 });
 
 // Save with `Ctrl + S`.
