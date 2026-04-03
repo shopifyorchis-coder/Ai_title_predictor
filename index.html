@@ -118,6 +118,21 @@
       min-height: calc(100vh - 56px)
     }
 
+    body.subscription-only .frame {
+      grid-template-columns: 1fr
+    }
+
+    body.subscription-only .nav {
+      display: none
+    }
+
+    body.subscription-only #page-billing {
+      max-width: 1380px;
+      margin: 0 auto;
+      width: 100%;
+      padding: 28px 32px
+    }
+
     .nav {
       background: var(--surface);
       border-right: 1px solid var(--border);
@@ -2106,6 +2121,7 @@
       enterprise: { name: 'Enterprise Plan', limit: Infinity, toast: 'Enterprise plan selected. Your 7-day trial is ready.' }
     };
     let currentPlan = (localStorage.getItem('tb_plan') || 'free').toLowerCase();
+    let planChosen = localStorage.getItem('tb_plan_selected') === '1';
 
     function cc(n) { return n <= 60 ? 'cok' : n <= 70 ? 'cwn' : 'cbd' }
     function escapeHtml(value) {
@@ -2147,6 +2163,7 @@
     }
 
     function goto(page) {
+      if (!planChosen && page !== 'billing') page = 'billing';
       document.querySelectorAll('.ni').forEach(n => n.classList.remove('active'));
       document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
       const ni = document.querySelector(`.ni[onclick="goto('${page}')"]`);
@@ -2169,11 +2186,12 @@
     }
 
     function updatePlanUI() {
+      document.body.classList.toggle('subscription-only', !planChosen);
       const pill = document.getElementById('planPill');
-      if (pill) pill.textContent = (PLAN_CONFIG[currentPlan]?.name || 'Free Plan') + ' · GPT-4o';
+      if (pill) pill.textContent = planChosen ? (PLAN_CONFIG[currentPlan]?.name || 'Free Plan') + ' · GPT-4o' : 'Choose a Plan';
 
       const freeBadge = document.getElementById('freePlanBadge');
-      if (freeBadge) freeBadge.style.display = currentPlan === 'free' ? 'inline-flex' : 'none';
+      if (freeBadge) freeBadge.style.display = planChosen && currentPlan === 'free' ? 'inline-flex' : 'none';
 
       const buttonMap = {
         free: document.getElementById('freePlanBtn'),
@@ -2182,13 +2200,15 @@
       };
       Object.entries(buttonMap).forEach(([plan, btn]) => {
         if (!btn) return;
-        btn.textContent = currentPlan === plan ? 'Selected' : 'Select ' + PLAN_CONFIG[plan].name.replace(' Plan', ' plan');
+        btn.textContent = planChosen && currentPlan === plan ? 'Selected' : 'Select ' + PLAN_CONFIG[plan].name.replace(' Plan', ' plan');
       });
     }
 
     function selectPlan(plan) {
       currentPlan = PLAN_CONFIG[plan] ? plan : 'free';
+      planChosen = true;
       localStorage.setItem('tb_plan', currentPlan);
+      localStorage.setItem('tb_plan_selected', '1');
       updatePlanUI();
       updateStats();
       showToast(PLAN_CONFIG[currentPlan].toast, currentPlan === 'free' ? 'ok' : 'def');
@@ -2650,6 +2670,7 @@
     }
 
     updatePlanUI();
+    if (!planChosen) goto('billing');
     testAPIKey();
     loadShopifyProducts();
     updateStats();
