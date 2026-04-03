@@ -118,21 +118,6 @@
       min-height: calc(100vh - 56px)
     }
 
-    body.subscription-only .frame {
-      grid-template-columns: 1fr
-    }
-
-    body.subscription-only .nav {
-      display: none
-    }
-
-    body.subscription-only #page-billing {
-      max-width: 1380px;
-      margin: 0 auto;
-      width: 100%;
-      padding: 28px 32px
-    }
-
     .nav {
       background: var(--surface);
       border-right: 1px solid var(--border);
@@ -1470,7 +1455,7 @@
       <div class="nsep"></div>
       <div class="nsec">Settings</div>
       <div class="ni" onclick="goto('prefs')">⚙️ Preferences</div>
-      <div class="ni" onclick="goto('billing')">📦 Billing</div>
+      <div class="ni active" onclick="goto('billing')">📦 Billing</div>
       <div class="nsp"></div>
       <div class="usage">
         <div class="urow"><span class="utitle">Monthly usage</span><span class="uct" id="uct">0 / 50</span></div>
@@ -1695,7 +1680,7 @@
     </div>
 
     <!-- PAGE: BILLING -->
-    <div class="page" id="page-billing">
+    <div class="page active" id="page-billing">
       <div class="ph">
         <div>
           <div class="ptitle">Billing &amp; Plans</div>
@@ -2115,15 +2100,12 @@
 
     let sel = new Set(), apiReady = false, genRes = {}, filtered = [], stF = '', colF = '', curPg = 1, productsLoading = false;
     let curTagProd = null, genTags = [];
-    const PLAN_STORAGE_KEY = 'tb_plan_v2';
-    const PLAN_SELECTED_KEY = 'tb_subscription_active_v2';
     const PLAN_CONFIG = {
       free: { name: 'Free Plan', limit: 50, toast: 'Free plan selected. You can start using the app now.' },
       pro: { name: 'Pro Plan', limit: 1000, toast: 'Pro plan selected. Your 7-day trial is ready.' },
       enterprise: { name: 'Enterprise Plan', limit: Infinity, toast: 'Enterprise plan selected. Your 7-day trial is ready.' }
     };
-    let currentPlan = (localStorage.getItem(PLAN_STORAGE_KEY) || 'free').toLowerCase();
-    let planChosen = localStorage.getItem(PLAN_SELECTED_KEY) === '1';
+    let currentPlan = (localStorage.getItem('tb_plan') || 'free').toLowerCase();
 
     function cc(n) { return n <= 60 ? 'cok' : n <= 70 ? 'cwn' : 'cbd' }
     function escapeHtml(value) {
@@ -2137,12 +2119,6 @@
     function requireAiReady() {
       if (apiReady) return true;
       showToast('Set OPENAI_API_KEY on the server, then test the connection here.', 'err');
-      return false;
-    }
-    function requirePlanChosen() {
-      if (planChosen) return true;
-      showToast('Choose a subscription plan first to unlock the app.', 'err');
-      goto('billing');
       return false;
     }
     function updateApiBanner() {
@@ -2199,12 +2175,11 @@
     }
 
     function updatePlanUI() {
-      document.body.classList.toggle('subscription-only', !planChosen);
       const pill = document.getElementById('planPill');
       if (pill) pill.textContent = planChosen ? (PLAN_CONFIG[currentPlan]?.name || 'Free Plan') + ' · GPT-4o' : 'Choose a Plan';
 
       const freeBadge = document.getElementById('freePlanBadge');
-      if (freeBadge) freeBadge.style.display = planChosen && currentPlan === 'free' ? 'inline-flex' : 'none';
+      if (freeBadge) freeBadge.style.display = currentPlan === 'free' ? 'inline-flex' : 'none';
 
       const buttonMap = {
         free: document.getElementById('freePlanBtn'),
@@ -2213,7 +2188,7 @@
       };
       Object.entries(buttonMap).forEach(([plan, btn]) => {
         if (!btn) return;
-        btn.textContent = planChosen && currentPlan === plan ? 'Selected' : 'Select ' + PLAN_CONFIG[plan].name.replace(' Plan', ' plan');
+        btn.textContent = currentPlan === plan ? 'Selected' : 'Select ' + PLAN_CONFIG[plan].name.replace(' Plan', ' plan');
       });
     }
 
@@ -2699,8 +2674,147 @@
       }
     }
 
+    currentPlan = (localStorage.getItem('tb_plan') || currentPlan || 'free').toLowerCase();
+
+    function goto(page) {
+      document.querySelectorAll('.ni').forEach(n => n.classList.remove('active'));
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      const ni = document.querySelector(`.ni[onclick="goto('${page}')"]`);
+      if (ni) ni.classList.add('active');
+      const pg = document.getElementById('page-' + page);
+      if (pg) pg.classList.add('active');
+      if (page === 'meta') renderMeta();
+      if (page === 'tags') renderTags();
+      if (page === 'analytics') renderAnalytics();
+      if (page === 'seo') renderSEO();
+    }
+
+    function updatePlanUI() {
+      const pill = document.getElementById('planPill');
+      if (pill) pill.textContent = (PLAN_CONFIG[currentPlan]?.name || 'Free Plan') + ' · GPT-4o';
+      const freeBadge = document.getElementById('freePlanBadge');
+      if (freeBadge) freeBadge.style.display = currentPlan === 'free' ? 'inline-flex' : 'none';
+      const buttonMap = {
+        free: document.getElementById('freePlanBtn'),
+        pro: document.getElementById('proPlanBtn'),
+        enterprise: document.getElementById('enterprisePlanBtn')
+      };
+      Object.entries(buttonMap).forEach(([plan, btn]) => {
+        if (!btn) return;
+        btn.textContent = currentPlan === plan ? 'Selected' : 'Select ' + PLAN_CONFIG[plan].name.replace(' Plan', ' plan');
+      });
+    }
+
+    function selectPlan(plan) {
+      currentPlan = PLAN_CONFIG[plan] ? plan : 'free';
+      localStorage.setItem('tb_plan', currentPlan);
+      updatePlanUI();
+      updateStats();
+      showToast(PLAN_CONFIG[currentPlan].toast, currentPlan === 'free' ? 'ok' : 'def');
+      goto('title');
+    }
+
+    function openOptModal() { if (!sel.size) return; showOptModal(PRODUCTS.filter(p => sel.has(p.id))) }
+    function openSingle(id) { showOptModal([PRODUCTS.find(x => x.id === id)]) }
+
+    function applySingle(id) {
+      const btn = document.getElementById('apply-' + id);
+      const inp = document.getElementById('edit-' + id);
+      const title = inp ? inp.value : (genRes[id]?.optimized_title || '');
+      btn.disabled = true; btn.textContent = 'Applying...';
+
+      const urlParams = new URLSearchParams(window.location.search);
+      const shop = urlParams.get('shop');
+
+      if (shop) {
+        return fetch('/api/products/' + id, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title })
+        })
+          .then(r => r.json())
+          .then(data => {
+            if (data.success) {
+              const p = PRODUCTS.find(x => x.id == id);
+              if (p) { p.title = title; p.name = title; p.updatedAtApp = true; }
+              btn.textContent = '✓ Applied!';
+              showToast('"' + title + '" saved to Shopify!', 'ok');
+              updateStats(); renderTable();
+              return { success: true, id };
+            } else {
+              btn.disabled = false; btn.textContent = '✓ Apply to Shopify';
+              showToast('Error: ' + data.error, 'err');
+              return Promise.reject(new Error(data.error || 'Apply failed'));
+            }
+          })
+          .catch(e => { btn.disabled = false; btn.textContent = '✓ Apply to Shopify'; showToast('Error: ' + e.message, 'err'); throw e; });
+      } else {
+        return new Promise((resolve) => {
+          setTimeout(() => {
+            const p = PRODUCTS.find(x => x.id == id);
+            if (p) { p.title = title; p.name = title; p.updatedAtApp = true; }
+            btn.textContent = '✓ Applied!';
+            showToast('"' + title + '" applied!', 'ok');
+            updateStats(); renderTable();
+            resolve({ success: true, id });
+          }, 1100);
+        });
+      }
+    }
+
+    async function loadShopifyProducts() {
+      const shop = getShopFromUrl();
+      productsLoading = true;
+      renderTable();
+      if (!shop) {
+        productsLoading = false;
+        filtered = [];
+        updateStats();
+        renderTable();
+        return;
+      }
+
+      try {
+        showToast('Loading your Shopify products...', 'def');
+        const res = await fetch('/api/products?shop=' + shop);
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Could not load Shopify products');
+
+        PRODUCTS.length = 0;
+        (data.products || []).forEach((p, i) => {
+          PRODUCTS.push({
+            id: p.id,
+            name: p.title,
+            title: p.title,
+            sku: p.sku,
+            image: p.image,
+            emoji: ['🛍', '📦', '🎁', '⭐', '💎', '🔥', '✨', '🎯'][i % 8],
+            status: p.status === 'active' ? 'active' : 'draft',
+            collection: 'Shopify',
+            updatedAtApp: false,
+            tags: [],
+            metaTitle: '',
+            metaDesc: ''
+          });
+        });
+
+        filtered = [...PRODUCTS];
+        document.getElementById('storeName').textContent = shop;
+        showToast('Loaded ' + PRODUCTS.length + ' products from ' + shop, 'ok');
+      } catch (err) {
+        PRODUCTS.length = 0;
+        filtered = [];
+        console.log('Shopify products load failed:', err.message);
+        showToast('Could not load Shopify products: ' + err.message, 'err');
+        if ((err.message || '').toLowerCase() === 'not authenticated') openReconnectModal(shop);
+      } finally {
+        productsLoading = false;
+        updateStats();
+        renderTable();
+      }
+    }
+
     updatePlanUI();
-    goto(planChosen ? 'title' : 'billing');
     testAPIKey();
     loadShopifyProducts();
     updateStats();
