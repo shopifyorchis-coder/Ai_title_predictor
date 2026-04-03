@@ -2145,6 +2145,11 @@
       goto('billing');
       return false;
     }
+    function updateApiBanner() {
+      const banner = document.getElementById('apiBanner');
+      if (!banner) return;
+      banner.style.display = apiReady ? 'none' : 'flex';
+    }
     function getShopFromUrl() {
       const urlParams = new URLSearchParams(window.location.search);
       const shop = (urlParams.get('shop') || SHOPIFY_CONFIG.shop || '').trim().toLowerCase();
@@ -2572,7 +2577,7 @@
     function recalcSEO() { renderSEO(); showToast('Checks refreshed from current product data.', 'ok') }
 
     // API KEYS PAGE
-    function renderAPIKeys() { return apiReady; }
+    function renderAPIKeys() { updateApiBanner(); return apiReady; }
     function editKey() {
       alert('Set OPENAI_API_KEY in your server environment, restart the app, then click "Test connection".');
     }
@@ -2590,7 +2595,7 @@
     }
     function saveShopify() { showToast('Shopify credentials are managed internally now.', 'def') }
 
-    function renderAPIKeys() { return apiReady; }
+    function renderAPIKeys() { updateApiBanner(); return apiReady; }
     async function clearKey() { apiReady = false; renderAPIKeys(); showToast('Refreshing server status...', 'def'); await testAPIKey(); }
     async function testAPIKey() {
       showToast('Testing connection...', 'def');
