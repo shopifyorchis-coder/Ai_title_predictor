@@ -1,6 +1,7 @@
 require('dotenv').config();
 
 const express = require('express');
+const fs = require('fs');
 const path = require('path');
 const axios = require('axios');
 const crypto = require('crypto');
@@ -8,15 +9,21 @@ const cookieParser = require('cookie-parser');
 const session = require('express-session');
 
 const app = express();
+app.set('trust proxy', 1);
 
 app.use(express.json());
 app.use(cookieParser());
 app.use(session({
   secret: process.env.SHOPIFY_API_SECRET,
   resave: false,
-  saveUninitialized: true
+  saveUninitialized: false,
+  cookie: {
+    sameSite: 'none',
+    secure: true,
+    httpOnly: true
+  }
 }));
-app.use(express.static(__dirname));
+app.use(express.static(__dirname, { index: false }));
 
 const {
   SHOPIFY_API_KEY,
@@ -28,6 +35,7 @@ const {
 
 const SHOPIFY_API_VERSION = '2024-01';
 const SHOP_DOMAIN_REGEX = /^[a-z0-9][a-z0-9-]*\.myshopify\.com$/;
+const INDEX_HTML = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
 
 function normalizeShop(shop) {
   if (typeof shop !== 'string') return null;
@@ -38,6 +46,49 @@ function normalizeShop(shop) {
 function buildShopifyUrl(shop, pathname) {
   return `https://${shop}${pathname}`;
 }
+
+function normalizeHost(host) {
+  if (typeof host !== 'string') return null;
+  const normalized = host.trim();
+  return normalized ? normalized : null;
+}
+
+function buildAppRedirectQuery(params) {
+  const query = new URLSearchParams();
+  if (params.shop) query.set('shop', params.shop);
+  if (params.host) query.set('host', params.host);
+  if (params.embedded) query.set('embedded', params.embedded);
+  return query.toString();
+}
+
+function renderEmbeddedHtml(req) {
+  const shop = normalizeShop(req.query.shop || req.session.shop);
+  const host = normalizeHost(req.query.host || req.session.host);
+  const embedded = typeof req.query.embedded === 'string'
+    ? req.query.embedded
+    : (req.session.embedded ? '1' : '');
+  const bootstrap = {
+    shopifyApiKey: SHOPIFY_API_KEY || '',
+    host: host || '',
+    shop: shop || '',
+    embedded: embedded === '1'
+  };
+  const appBridgeHead = `
+<meta name="shopify-api-key" content="${SHOPIFY_API_KEY || ''}" />
+<script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
+<script>window.__SHOPIFY_CONFIG__=${JSON.stringify(bootstrap)};</script>
+</head>`;
+  return INDEX_HTML.replace('</head>', appBridgeHead);
+}
+
+app.use((req, res, next) => {
+  const shop = normalizeShop(req.query.shop || req.session?.shop);
+  const frameAncestors = shop
+    ? `frame-ancestors https://${shop} https://admin.shopify.com;`
+    : "frame-ancestors https://admin.shopify.com https://*.myshopify.com;";
+  res.setHeader('Content-Security-Policy', frameAncestors);
+  next();
+});
 
 function verifyShopifyHmac(query) {
   const { hmac, signature, ...rest } = query;
@@ -102,6 +153,9 @@ app.get('/auth', (req, res) => {
 
   const state = crypto.randomBytes(16).toString('hex');
   req.session.state = state;
+  req.session.shop = shop;
+  req.session.host = normalizeHost(req.query.host) || req.session.host || null;
+  req.session.embedded = req.query.embedded === '1';
 
   const redirectUri = `${SHOPIFY_APP_URL}/auth/callback`;
   const installUrl = `${buildShopifyUrl(shop, '/admin/oauth/authorize')}?client_id=${encodeURIComponent(SHOPIFY_API_KEY)}&scope=${encodeURIComponent(SHOPIFY_SCOPES)}&state=${encodeURIComponent(state)}&redirect_uri=${encodeURIComponent(redirectUri)}`;
@@ -112,6 +166,8 @@ app.get('/auth', (req, res) => {
 app.get('/auth/callback', async (req, res) => {
   const { shop, code, state } = req.query;
   const normalizedShop = normalizeShop(shop);
+  const host = normalizeHost(req.query.host) || req.session.host;
+  const embedded = req.query.embedded === '1' || req.session.embedded;
 
   if (!normalizedShop || !code || !verifyShopifyHmac(req.query)) {
     return res.status(403).send('Request origin cannot be verified');
@@ -133,10 +189,12 @@ app.get('/auth/callback', async (req, res) => {
 
     req.session.shop = normalizedShop;
     req.session.accessToken = tokenRes.data.access_token;
+    req.session.host = host || null;
+    req.session.embedded = Boolean(embedded);
     delete req.session.state;
 
     console.log(`Shop installed: ${normalizedShop}`);
-    res.redirect(`/?shop=${encodeURIComponent(normalizedShop)}`);
+    res.redirect(`/?${buildAppRedirectQuery({ shop: normalizedShop, host, embedded: embedded ? '1' : '' })}`);
   } catch (err) {
     console.error('OAuth error:', err.message);
     res.status(500).send('OAuth failed: ' + err.message);
@@ -205,8 +263,13 @@ app.put('/api/products/:id', async (req, res) => {
   }
 });
 
-app.get('/api/config', (_req, res) => {
-  res.json({ openaiConfigured: Boolean(OPENAI_API_KEY) });
+app.get('/api/config', (req, res) => {
+  res.json({
+    openaiConfigured: Boolean(OPENAI_API_KEY),
+    shopifyApiKey: SHOPIFY_API_KEY || '',
+    host: normalizeHost(req.query.host || req.session.host) || '',
+    shop: normalizeShop(req.query.shop || req.session.shop) || ''
+  });
 });
 
 app.post('/api/optimize-title', async (req, res) => {
@@ -250,7 +313,7 @@ Respond ONLY in JSON: {"tags":["tag1","tag2",...]}`;
 });
 
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'));
+  res.type('html').send(renderEmbeddedHtml(req));
 });
 
 const PORT = process.env.PORT || 3000;

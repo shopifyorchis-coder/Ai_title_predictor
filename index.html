@@ -1857,6 +1857,7 @@
 
   <script>
     const PRODUCTS = [];
+    const SHOPIFY_CONFIG = window.__SHOPIFY_CONFIG__ || {};
 
     let sel = new Set(), apiReady = false, genRes = {}, filtered = [], stF = '', colF = '', curPg = 1, productsLoading = false;
     let curTagProd = null, genTags = [];
@@ -1878,7 +1879,15 @@
     }
     function getShopFromUrl() {
       const urlParams = new URLSearchParams(window.location.search);
-      return (urlParams.get('shop') || '').trim().toLowerCase();
+      const shop = (urlParams.get('shop') || SHOPIFY_CONFIG.shop || '').trim().toLowerCase();
+      if (shop) localStorage.setItem('titleboost_shop', shop);
+      return shop || localStorage.getItem('titleboost_shop') || '';
+    }
+    function getHostParam() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const host = (urlParams.get('host') || SHOPIFY_CONFIG.host || '').trim();
+      if (host) localStorage.setItem('titleboost_host', host);
+      return host || localStorage.getItem('titleboost_host') || '';
     }
     function hasConnectedStore() {
       return Boolean(getShopFromUrl());
@@ -2272,11 +2281,14 @@
     }
     function reconnectStore() {
       const shop = getShopFromUrl();
+      const host = getHostParam();
       if (!shop) {
         showToast('Shop domain not found in the app URL.', 'err');
         return;
       }
-      const authUrl = '/auth?shop=' + encodeURIComponent(shop);
+      const params = new URLSearchParams({ shop, embedded: '1' });
+      if (host) params.set('host', host);
+      const authUrl = '/auth?' + params.toString();
       if (window.top) window.top.location.href = authUrl;
       else window.location.href = authUrl;
     }
