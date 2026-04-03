@@ -1687,6 +1687,7 @@
           <div class="psub">Server-managed integrations for OpenAI and Shopify</div>
         </div>
       </div>
+      </div>
       <div class="sgrp">
         <div class="sgh">
           <div class="sgt">OpenAI</div>
@@ -1846,7 +1847,55 @@
           <div class="psub">Manage your subscription and usage</div>
         </div>
       </div>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px">
+      <div class="plan-grid">
+        <div class="plan-card">
+          <div class="plan-tag">Free forever</div>
+          <div class="card-title">Free</div>
+          <div class="plan-price">$0 <span>/month</span></div>
+          <div class="plan-note">A simple starting point for testing the app on your store.</div>
+          <div class="plan-trial">Start instantly with no trial needed</div>
+          <span class="badge bok">Current plan</span>
+          <button class="btn bs" style="width:100%;margin-top:16px"
+            onclick="showToast('Free plan selected. You can start using the app now.','ok')">Select Free plan</button>
+          <ul class="plan-features">
+            <li>50 title optimizations each month</li>
+            <li>Title Optimizer access only</li>
+            <li>Basic reports and SEO score</li>
+            <li>Built for single-store testing</li>
+          </ul>
+        </div>
+        <div class="plan-card featured">
+          <div class="plan-tag">Most popular</div>
+          <div class="card-title">Pro</div>
+          <div class="plan-price">$9.99 <span>/month</span></div>
+          <div class="plan-note">A practical plan for merchants who optimize products every week.</div>
+          <div class="plan-trial">Includes a 7-day free trial</div>
+          <button class="btn bm" style="width:100%;margin-top:16px"
+            onclick="showToast('Pro plan selected. Starting 7-day trial...','def')">Select Pro plan</button>
+          <ul class="plan-features">
+            <li>1000 title optimizations every month</li>
+            <li>SEO Meta Editor and Tag Suggester</li>
+            <li>Full reports and SEO score</li>
+            <li>Great fit for growing Shopify stores</li>
+          </ul>
+        </div>
+        <div class="plan-card">
+          <div class="plan-tag">Scale up</div>
+          <div class="card-title">Enterprise</div>
+          <div class="plan-price">$29.99 <span>/month</span></div>
+          <div class="plan-note">Made for larger catalogs that need more automation every day.</div>
+          <div class="plan-trial">Includes a 7-day free trial</div>
+          <button class="btn bp" style="width:100%;margin-top:16px"
+            onclick="showToast('Enterprise plan selected. Starting 7-day trial...','def')">Select Enterprise plan</button>
+          <ul class="plan-features">
+            <li>Unlimited title optimizations per month</li>
+            <li>All AI tools unlocked</li>
+            <li>Full reports and SEO score</li>
+            <li>Best for teams with bigger product catalogs</li>
+          </ul>
+        </div>
+      </div>
+      <div style="display:none">
         <div class="card" style="border:2px solid var(--border)">
           <div class="card-title">Free</div>
           <div style="font-size:28px;font-weight:600;margin-bottom:4px">$0<span
