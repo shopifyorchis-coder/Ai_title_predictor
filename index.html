@@ -1382,7 +1382,7 @@
           <div class="ss">In your store</div>
         </div>
         <div class="sc">
-          <div class="sl">Optimized</div>
+          <div class="sl">Updated In App</div>
           <div class="sv" style="color:var(--okt)" id="optCt">2</div>
           <div class="ss">This month</div>
         </div>
@@ -1399,7 +1399,6 @@
           <option value="">All statuses</option>
           <option value="active">Active</option>
           <option value="draft">Draft</option>
-          <option value="optimized">Optimized</option>
         </select>
         <select class="sel" onchange="filterCol(this.value)">
           <option value="">All collections</option>
@@ -1483,12 +1482,12 @@
       </div>
       <div class="sg">
         <div class="sc">
-          <div class="sl">Titles optimized</div>
+          <div class="sl">Titles updated in app</div>
           <div class="sv" style="color:var(--okt)" id="anOpt">2</div>
           <div class="ss">↑ 12% vs last month</div>
         </div>
         <div class="sc">
-          <div class="sl">Avg. SEO score</div>
+          <div class="sl">Avg. title length</div>
           <div class="sv" style="color:var(--magic)" id="anSEO">74</div>
           <div class="ss">↑ 8 points improvement</div>
         </div>
@@ -1500,7 +1499,7 @@
       </div>
       <div class="tw" style="margin-bottom:20px">
         <div style="padding:16px 20px;border-bottom:1px solid var(--border);font-weight:600;font-size:14px">
-          Optimizations by collection</div>
+          Products by collection</div>
         <div style="padding:20px" id="analyticsChart"></div>
       </div>
       <div class="tw">
@@ -1525,8 +1524,8 @@
     <div class="page" id="page-seo">
       <div class="ph">
         <div>
-          <div class="ptitle">SEO Score</div>
-          <div class="psub">Detailed SEO health for all your products</div>
+          <div class="ptitle">Title Health</div>
+          <div class="psub">Simple title-length and metadata checks for all loaded products</div>
         </div>
         <button class="btn bm" onclick="recalcSEO()">↺ Recalculate scores</button>
       </div>
@@ -1913,7 +1912,7 @@
     }
 
     function updateStats() {
-      const opt = PRODUCTS.filter(p => p.optimized).length;
+      const opt = PRODUCTS.filter(p => p.updatedAtApp).length;
       const avg = PRODUCTS.length ? Math.round(PRODUCTS.reduce((s, p) => s + p.title.length, 0) / PRODUCTS.length) : 0;
       document.getElementById('totalCt').textContent = PRODUCTS.length;
       document.getElementById('optCt').textContent = opt;
@@ -1921,6 +1920,7 @@
       document.getElementById('uct').textContent = opt + ' / 50';
       document.getElementById('ub').style.width = Math.round((opt / 50) * 100) + '%';
       document.getElementById('anOpt').textContent = opt;
+      document.getElementById('anSEO').textContent = avg;
       document.getElementById('anCr').innerHTML = opt + '<span style="font-size:14px;color:var(--t2)">/50</span>';
       document.getElementById('bilOpt').textContent = opt + ' / 50';
     }
@@ -1939,7 +1939,7 @@
       }
       items.forEach(p => {
         const n = p.title.length;
-        const badge = p.optimized ? `<span class="badge bma">Optimized</span>` : p.status === 'active' ? `<span class="badge bok">Active</span>` : `<span class="badge bdf">Draft</span>`;
+        const badge = p.updatedAtApp ? `<span class="badge bma">Updated in app</span>` : p.status === 'active' ? `<span class="badge bok">Active</span>` : `<span class="badge bdf">Draft</span>`;
         const tr = document.createElement('tr');
         if (sel.has(p.id)) tr.classList.add('sel-r');
         tr.innerHTML = `<td><input type="checkbox" ${sel.has(p.id) ? 'checked' : ''} onchange="togSel(${p.id},this.checked)"/></td>
@@ -1966,7 +1966,7 @@
     }
     function filterP(q) {
       const s = q.toLowerCase();
-      filtered = PRODUCTS.filter(p => (!stF || (stF === 'optimized' ? p.optimized : p.status === stF)) && (!colF || p.collection === colF) && (p.name.toLowerCase().includes(s) || p.title.toLowerCase().includes(s) || p.sku.toLowerCase().includes(s)));
+      filtered = PRODUCTS.filter(p => (!stF || p.status === stF) && (!colF || p.collection === colF) && (p.name.toLowerCase().includes(s) || p.title.toLowerCase().includes(s) || p.sku.toLowerCase().includes(s)));
       curPg = 1; renderTable();
     }
     function filterSt(v) { stF = v; filterP(document.getElementById('titleSearch').value) }
@@ -2046,7 +2046,7 @@
     .then(data => {
       if (data.success) {
         const p = PRODUCTS.find(x => x.id == id);
-        if (p) { p.title = title; p.optimized = true; p.seoScore = Math.min(95, p.seoScore + 20); }
+        if (p) { p.title = title; p.name = title; p.updatedAtApp = true; }
         btn.textContent = '✓ Applied!';
         showToast('"' + title + '" saved to Shopify!', 'ok');
         updateStats(); renderTable();
@@ -2062,7 +2062,7 @@
     return new Promise((resolve) => {
       setTimeout(() => {
       const p = PRODUCTS.find(x => x.id == id);
-      if (p) { p.title = title; p.optimized = true; }
+      if (p) { p.title = title; p.name = title; p.updatedAtApp = true; }
       btn.textContent = '✓ Applied!';
       showToast('"' + title + '" applied!', 'ok');
       updateStats(); renderTable();
@@ -2216,9 +2216,9 @@
       document.getElementById('analyticsChart').innerHTML = data.map(d => '<div class="chart-row"><div class="chart-label">' + d.l + '</div><div class="chart-track"><div class="chart-fill" style="width:' + ((d.v / 10) * 100) + '%;background:' + d.c + '">' + d.v + ' products</div></div><div class="chart-val">' + d.v + '</div></div>').join('');
       const acts = PRODUCTS.slice(0, 4).map((product) => ({
         p: product.name,
-        a: product.optimized ? 'Title optimized' : 'Imported from Shopify',
-        b: product.optimized ? product.title : product.status,
-        af: product.optimized ? 'Ready in app' : 'Available to optimize',
+        a: product.updatedAtApp ? 'Title updated in app' : 'Imported from Shopify',
+        b: product.updatedAtApp ? product.title : product.status,
+        af: product.updatedAtApp ? 'Saved to Shopify' : 'Available to optimize',
         dt: 'Today'
       }));
       document.getElementById('actLog').innerHTML = acts.map(a => '<tr><td><strong>' + a.p + '</strong></td><td><span class="badge bma">' + a.a + '</span></td><td class="tc">' + a.b + '</td><td class="tc">' + a.af + '</td><td style="color:var(--t2);font-size:12px">' + a.dt + '</td></tr>').join('');
@@ -2227,26 +2227,27 @@
     // SEO SCORE
     function renderSEO() {
       const items = PRODUCTS.length
-        ? [{ n: 'Title length', s: 72, c: '#1a9e6a' }, { n: 'Keyword density', s: 65, c: '#7c3aed' }, { n: 'Meta description', s: 58, c: '#e07d00' }, { n: 'Tag coverage', s: 80, c: '#1a9e6a' }, { n: 'Title uniqueness', s: 90, c: '#1a9e6a' }, { n: 'Readability', s: 76, c: '#7c3aed' }]
+        ? [{ n: 'Title length', s: Math.max(0, 100 - Math.round(PRODUCTS.reduce((sum, p) => sum + Math.abs(p.title.length - 60), 0) / PRODUCTS.length)), c: '#1a9e6a' }, { n: 'Meta coverage', s: Math.round((PRODUCTS.filter(p => p.metaTitle && p.metaDesc).length / PRODUCTS.length) * 100), c: '#7c3aed' }, { n: 'Tag coverage', s: Math.round((PRODUCTS.filter(p => p.tags.length >= 4).length / PRODUCTS.length) * 100), c: '#e07d00' }]
         : [{ n: 'Store connection', s: 0, c: '#616161' }];
       const avg = Math.round(items.reduce((s, i) => s + i.s, 0) / items.length);
       document.getElementById('scoreNum').textContent = avg;
       document.getElementById('scoreCircle').setAttribute('stroke-dashoffset', 364 - (364 * (avg / 100)));
       document.getElementById('scoreBreakdown').innerHTML = items.map(i => '<div class="score-item"><div class="score-name">' + i.n + '</div><div class="score-bar-wrap"><div class="score-bar" style="width:' + i.s + '%;background:' + i.c + '"></div></div><span style="font-size:13px;font-weight:600;color:' + i.c + '">' + i.s + '</span></div>').join('');
-      document.getElementById('seoTable').innerHTML = [...PRODUCTS].sort((a, b) => a.seoScore - b.seoScore).map(p => {
+      document.getElementById('seoTable').innerHTML = [...PRODUCTS].sort((a, b) => a.title.length - b.title.length).map(p => {
         const issues = [];
         if (p.title.length > 70) issues.push('Title too long');
         if (!p.metaTitle) issues.push('No meta title');
         if (!p.metaDesc) issues.push('No meta desc');
         if (p.tags.length < 4) issues.push('Few tags');
-        const c = p.seoScore >= 80 ? 'var(--okt)' : p.seoScore >= 60 ? 'var(--wt)' : 'var(--bad)';
+        const score = Math.max(0, 100 - Math.abs(p.title.length - 60) - (p.metaTitle ? 0 : 15) - (p.metaDesc ? 0 : 15) - (p.tags.length >= 4 ? 0 : 10));
+        const c = score >= 80 ? 'var(--okt)' : score >= 60 ? 'var(--wt)' : 'var(--bad)';
         return '<tr><td><div class="pc"><div class="pt2">' + p.emoji + '</div><div><div class="pn">' + p.name + '</div><div class="psk">' + p.sku + '</div></div></div></td>' +
-          '<td><span style="font-size:18px;font-weight:600;color:' + c + '">' + p.seoScore + '</span></td>' +
+          '<td><span style="font-size:18px;font-weight:600;color:' + c + '">' + score + '</span></td>' +
           '<td>' + (issues.length ? issues.map(i => '<span class="badge bwa" style="margin:2px">' + i + '</span>').join('') : '<span class="badge bok">All good</span>') + '</td>' +
           '<td><button class="rb" onclick="openSingle(' + p.id + ');goto(\'title\')">Fix now</button></td></tr>';
       }).join('') || '<tr><td colspan="4"><div class="empty"><div class="ei">📭</div><div class="et">Connect your store to see SEO scores</div></div></td></tr>';
     }
-    function recalcSEO() { PRODUCTS.forEach(p => { p.seoScore = Math.min(95, p.seoScore + Math.floor(Math.random() * 8)) }); renderSEO(); showToast('SEO scores recalculated!', 'ok') }
+    function recalcSEO() { renderSEO(); showToast('Checks refreshed from current product data.', 'ok') }
 
     // API KEYS PAGE
     function renderAPIKeys() {
@@ -2324,17 +2325,16 @@
         (data.products || []).forEach((p, i) => {
           PRODUCTS.push({
             id: p.id,
-            name: p.name,
+            name: p.title,
             title: p.title,
             sku: p.sku,
             emoji: ['🛍', '📦', '🎁', '⭐', '💎', '🔥', '✨', '🎯'][i % 8],
             status: p.status === 'active' ? 'active' : 'draft',
             collection: 'Shopify',
-            optimized: false,
+            updatedAtApp: false,
             tags: [],
             metaTitle: '',
-            metaDesc: '',
-            seoScore: Math.floor(Math.random() * 40) + 40
+            metaDesc: ''
           });
         });
 
