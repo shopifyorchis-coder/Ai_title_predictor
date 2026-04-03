@@ -2695,7 +2695,7 @@
     }
 
     updatePlanUI();
-    if (!planChosen) goto('billing');
+    goto(planChosen ? 'title' : 'billing');
     testAPIKey();
     loadShopifyProducts();
     updateStats();
