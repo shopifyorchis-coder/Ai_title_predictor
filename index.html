@@ -1679,6 +1679,83 @@
       </div>
     </div>
 
+    <!-- PAGE: BILLING -->
+    <div class="page active" id="page-billing">
+      <div class="ph">
+        <div>
+          <div class="ptitle">Billing &amp; Plans</div>
+          <div class="psub">Choose a plan to start using TitleBoost AI</div>
+        </div>
+      </div>
+      <div class="plan-grid">
+        <div class="plan-card">
+          <div class="plan-tag">Free forever</div>
+          <div class="card-title">Free</div>
+          <div class="plan-price">$0 <span>/month</span></div>
+          <div class="plan-note">A simple starting point for testing the app on your store.</div>
+          <div class="plan-trial">Start instantly with no trial needed</div>
+          <span class="badge bok" id="freePlanBadge">Current plan</span>
+          <button class="btn bs" id="freePlanBtn" style="width:100%;margin-top:16px"
+            onclick="selectPlan('free')">Select Free plan</button>
+          <ul class="plan-features">
+            <li>50 title optimizations each month</li>
+            <li>Title Optimizer access only</li>
+            <li>Basic reports and SEO score</li>
+            <li>Built for single-store testing</li>
+          </ul>
+        </div>
+        <div class="plan-card featured">
+          <div class="plan-tag">Most popular</div>
+          <div class="card-title">Pro</div>
+          <div class="plan-price">$9.99 <span>/month</span></div>
+          <div class="plan-note">A practical plan for merchants who optimize products every week.</div>
+          <div class="plan-trial">Includes a 7-day free trial</div>
+          <button class="btn bm" id="proPlanBtn" style="width:100%;margin-top:16px"
+            onclick="selectPlan('pro')">Select Pro plan</button>
+          <ul class="plan-features">
+            <li>1000 title optimizations every month</li>
+            <li>SEO Meta Editor and Tag Suggester</li>
+            <li>Full reports and SEO score</li>
+            <li>Great fit for growing Shopify stores</li>
+          </ul>
+        </div>
+        <div class="plan-card">
+          <div class="plan-tag">Scale up</div>
+          <div class="card-title">Enterprise</div>
+          <div class="plan-price">$29.99 <span>/month</span></div>
+          <div class="plan-note">Made for larger catalogs that need more automation every day.</div>
+          <div class="plan-trial">Includes a 7-day free trial</div>
+          <button class="btn bp" id="enterprisePlanBtn" style="width:100%;margin-top:16px"
+            onclick="selectPlan('enterprise')">Select Enterprise plan</button>
+          <ul class="plan-features">
+            <li>Unlimited title optimizations per month</li>
+            <li>All AI tools unlocked</li>
+            <li>Full reports and SEO score</li>
+            <li>Best for teams with bigger product catalogs</li>
+          </ul>
+        </div>
+      </div>
+      <div class="sgrp">
+        <div class="sgh">
+          <div class="sgt">Usage this month</div>
+        </div>
+        <div class="sgb">
+          <div class="sgr">
+            <div><div class="sgl">Title optimizations</div></div><span id="bilOpt">0 / 50</span>
+          </div>
+          <div class="sgr">
+            <div><div class="sgl">Meta descriptions generated</div></div><span>0 / 50</span>
+          </div>
+          <div class="sgr">
+            <div><div class="sgl">Tag suggestions</div></div><span>0 / 50</span>
+          </div>
+          <div class="sgr">
+            <div><div class="sgl">Billing period resets</div></div><span>May 1, 2026</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- PAGE: PREFERENCES -->
     <div class="page" id="page-prefs">
       <div class="ph">
@@ -1840,8 +1917,8 @@
       <button class="btn bm" onclick="showToast('Preferences saved!','ok')">Save preferences</button>
     </div>
 
-    <!-- PAGE: BILLING -->
-    <div class="page active" id="page-billing">
+    <!-- PAGE: BILLING LEGACY -->
+    <div class="page" id="page-billing-legacy">
       <div class="ph">
         <div>
           <div class="ptitle">Billing &amp; Plans</div>
