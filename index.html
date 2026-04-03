@@ -1,588 +1,1943 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>TitleBoost AI — Shopify Optimizer</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
-<style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --bg:#f1f1f1;--surface:#fff;--s2:#f7f7f7;
-  --fill:#303030;--f2:#616161;--f3:#8a8a8a;
-  --ok:#1a9e6a;--okbg:#e3f1ec;--okt:#1a7a52;
-  --bad:#c92a2a;--badbg:#ffeaea;
-  --warn:#e07d00;--wbg:#fff3cd;--wt:#7d5500;
-  --magic:#7c3aed;--mbg:#f2edff;--mt:#4a1fb8;
-  --border:#e0e0e0;--border2:#c9c9c9;
-  --text:#303030;--t2:#616161;--t3:#8a8a8a;
-  --r:4px;--rm:8px;--rl:12px;--rf:9999px;
-  --sh:0 1px 0 rgba(0,0,0,.05);
-}
-body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;min-height:100vh}
-.topbar{background:var(--fill);height:56px;display:flex;align-items:center;padding:0 20px;gap:12px;position:sticky;top:0;z-index:100}
-.logo{display:flex;align-items:center;gap:8px;color:#fff;font-size:15px;font-weight:600}
-.logo-icon{width:28px;height:28px;background:#96bf48;border-radius:var(--r);display:flex;align-items:center;justify-content:center;font-size:15px}
-.tdiv{width:1px;height:20px;background:rgba(255,255,255,.2)}
-.tstore{font-size:13px;color:rgba(255,255,255,.75);font-weight:500}
-.tsp{flex:1}
-.tpill{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);border-radius:var(--rf);padding:3px 10px;font-size:12px;font-weight:500;color:rgba(255,255,255,.85)}
-.frame{display:grid;grid-template-columns:240px 1fr;min-height:calc(100vh - 56px)}
-.nav{background:var(--surface);border-right:1px solid var(--border);padding:12px 0;display:flex;flex-direction:column}
-.nsec{padding:16px 16px 4px;font-size:11px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.06em}
-.ni{display:flex;align-items:center;gap:10px;padding:9px 16px;font-size:14px;color:var(--t2);cursor:pointer;border-left:3px solid transparent;transition:all .1s;user-select:none}
-.ni:hover{background:var(--s2);color:var(--text)}
-.ni.active{background:var(--mbg);color:var(--mt);border-left-color:var(--magic);font-weight:500}
-.nsep{height:1px;background:var(--border);margin:8px 0}
-.nsp{flex:1}
-.usage{margin:12px;background:var(--s2);border:1px solid var(--border);border-radius:var(--rm);padding:12px}
-.urow{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
-.utitle{font-size:12px;font-weight:600}
-.uct{font-size:12px;color:var(--t2)}
-.pbg{height:6px;background:var(--border);border-radius:var(--rf);margin-bottom:12px}
-.pf{height:6px;background:var(--magic);border-radius:var(--rf);width:36%;transition:width .4s}
-.bup{width:100%;background:var(--fill);color:#fff;border:none;border-radius:var(--rm);padding:7px 12px;font-size:12px;font-family:inherit;font-weight:500;cursor:pointer}
-.bup:hover{background:#1a1a1a}
-.page{display:none;padding:24px 32px;overflow-x:hidden;min-width:0;animation:fi .2s ease}
-.page.active{display:block}
-@keyframes fi{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
-.ph{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;gap:16px}
-.ptitle{font-size:20px;font-weight:600;letter-spacing:-.2px;margin-bottom:2px}
-.psub{font-size:14px;color:var(--t2)}
-.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:var(--rm);font-size:14px;font-family:inherit;font-weight:500;cursor:pointer;border:1px solid transparent;transition:all .12s;white-space:nowrap;line-height:1.4}
-.bp{background:var(--fill);color:#fff;border-color:var(--fill);box-shadow:var(--sh),inset 0 -1px 0 rgba(0,0,0,.2)}
-.bp:hover{background:#1a1a1a}
-.bp:disabled{background:var(--f3);border-color:var(--f3);cursor:not-allowed;box-shadow:none}
-.bs{background:var(--surface);color:var(--text);border-color:var(--border2);box-shadow:var(--sh),inset 0 -1px 0 rgba(0,0,0,.08)}
-.bs:hover{background:var(--s2)}
-.bm{background:var(--magic);color:#fff;border-color:var(--magic);box-shadow:var(--sh),inset 0 -1px 0 rgba(0,0,0,.2)}
-.bm:hover{background:#6d28d9}
-.bm:disabled{background:#c4b5fd;border-color:#c4b5fd;cursor:not-allowed;box-shadow:none}
-.banner{border-radius:var(--rm);padding:14px 16px;margin-bottom:20px;display:flex;align-items:center;gap:12px;border:1px solid;flex-wrap:wrap}
-.bwarn{background:var(--wbg);border-color:var(--warn)}
-.btitle{font-size:14px;font-weight:600;margin-bottom:2px}
-.bsub{font-size:13px;color:var(--t2)}
-.binput{background:var(--surface);border:1px solid var(--border2);border-radius:var(--r);padding:6px 10px;font-size:13px;font-family:'SF Mono',monospace;color:var(--text);outline:none;min-width:220px}
-.binput:focus{border-color:#005bd3;box-shadow:0 0 0 2px rgba(0,91,211,.2)}
-.bcls{background:none;border:none;cursor:pointer;font-size:18px;color:var(--t2);padding:2px 6px;border-radius:var(--r);line-height:1}
-.sg{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:20px}
-.sc{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);box-shadow:var(--sh);padding:16px 20px}
-.sl{font-size:11px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px}
-.sv{font-size:28px;font-weight:600;letter-spacing:-1px;line-height:1;margin-bottom:4px}
-.ss{font-size:12px;color:var(--t2)}
-.filt{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);box-shadow:var(--sh);padding:12px 16px;display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap}
-.sw{position:relative;flex:1;min-width:180px}
-.sw input{width:100%;background:var(--s2);border:1px solid var(--border2);border-radius:var(--r);padding:7px 10px 7px 30px;font-size:14px;font-family:inherit;color:var(--text);outline:none}
-.sw input:focus{border-color:#005bd3;box-shadow:0 0 0 2px rgba(0,91,211,.2);background:var(--surface)}
-.si{position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--t3);font-size:13px;pointer-events:none}
-.sel{background:var(--surface);border:1px solid var(--border2);border-radius:var(--r);padding:7px 26px 7px 10px;font-size:14px;font-family:inherit;color:var(--text);outline:none;cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23616161' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center}
-.spill{font-size:12px;font-weight:500;color:var(--mt);background:var(--mbg);padding:3px 10px;border-radius:var(--rf);display:none}
-.tw{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);box-shadow:var(--sh);overflow:hidden;margin-bottom:24px}
-table{width:100%;border-collapse:collapse}
-thead tr{background:var(--s2);border-bottom:1px solid var(--border)}
-th{text-align:left;padding:10px 16px;font-size:11px;font-weight:600;color:var(--t2);text-transform:uppercase;letter-spacing:.05em;white-space:nowrap}
-th:first-child{width:44px;padding-right:0}
-tbody tr{border-bottom:1px solid var(--border);transition:background .1s}
-tbody tr:last-child{border-bottom:none}
-tbody tr:hover{background:var(--s2)}
-tbody tr.sel-r{background:var(--mbg)}
-td{padding:12px 16px;vertical-align:middle}
-td:first-child{padding-right:0}
-input[type="checkbox"]{width:15px;height:15px;accent-color:var(--magic);cursor:pointer}
-.pc{display:flex;align-items:center;gap:12px}
-.pt2{width:40px;height:40px;border-radius:var(--r);background:var(--s2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
-.pn{font-size:14px;font-weight:500}
-.psk{font-size:12px;color:var(--t2);font-family:'SF Mono',monospace}
-.tc{font-size:13px;color:var(--t2);max-width:260px;line-height:1.4}
-.badge{display:inline-flex;align-items:center;gap:5px;padding:2px 8px;border-radius:var(--rf);font-size:12px;font-weight:500;line-height:1.6}
-.badge::before{content:'';width:6px;height:6px;border-radius:50%;display:inline-block;flex-shrink:0}
-.bok{background:var(--okbg);color:var(--okt)}.bok::before{background:var(--ok)}
-.bdf{background:var(--s2);color:var(--t2);border:1px solid var(--border)}.bdf::before{background:var(--f3)}
-.bma{background:var(--mbg);color:var(--mt)}.bma::before{background:var(--magic)}
-.bwa{background:var(--wbg);color:var(--wt)}.bwa::before{background:var(--warn)}
-.ct{display:inline-block;padding:2px 8px;border-radius:var(--rf);font-size:12px;font-weight:500;font-family:monospace}
-.cok{background:var(--okbg);color:var(--okt)}.cwn{background:var(--wbg);color:var(--wt)}.cbd{background:var(--badbg);color:var(--bad)}
-.rb{background:none;border:1px solid var(--border2);border-radius:var(--r);padding:5px 12px;font-size:13px;font-family:inherit;font-weight:500;color:var(--text);cursor:pointer;transition:all .1s}
-.rb:hover{background:var(--s2);border-color:var(--f3)}
-.pg{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-top:1px solid var(--border);background:var(--s2)}
-.pgi{font-size:13px;color:var(--t2)}
-.pgb{display:flex;gap:4px}
-.pgbtn{min-width:32px;height:32px;border:1px solid var(--border2);border-radius:var(--r);background:var(--surface);font-size:13px;font-family:inherit;color:var(--text);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0 6px;transition:background .1s}
-.pgbtn:hover{background:var(--s2)}
-.pgbtn.act{background:var(--fill);color:#fff;border-color:var(--fill)}
-.mo{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;align-items:center;justify-content:center;padding:24px}
-.mo.open{display:flex}
-.modal{background:var(--surface);border-radius:var(--rl);width:100%;max-width:820px;max-height:90vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.18)}
-.mh{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
-.mht{font-size:16px;font-weight:600}
-.mc{width:32px;height:32px;border:1px solid var(--border2);border-radius:var(--r);background:var(--surface);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--t2);transition:background .1s}
-.mc:hover{background:var(--s2)}
-.mb{padding:20px 24px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:16px}
-.mf{padding:14px 24px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-shrink:0;background:var(--s2)}
-.rc{border:1px solid var(--border);border-radius:var(--rm);overflow:hidden}
-.rh{background:var(--s2);padding:10px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
-.rp{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:500}
-.rsk{font-family:monospace;font-size:12px;color:var(--t2);background:var(--surface);border:1px solid var(--border);border-radius:3px;padding:1px 6px}
-.rbody{padding:16px;display:flex;flex-direction:column;gap:12px}
-.cg{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.cb{border-radius:var(--r);padding:12px}
-.co{background:var(--s2);border:1px solid var(--border)}
-.ca{background:var(--mbg);border:1px solid var(--magic)}
-.clb{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
-.co .clb{color:var(--t2)}.ca .clb{color:var(--mt)}
-.ctx{font-size:14px;color:var(--text);line-height:1.4}.ca .ctx{color:var(--mt)}
-.cch{font-size:12px;margin-top:4px;color:var(--t2);font-family:monospace}
-.fg{display:flex;flex-direction:column;gap:4px}
-.fl{font-size:11px;font-weight:600;color:var(--t2);text-transform:uppercase;letter-spacing:.05em}
-.ti{width:100%;border:1px solid var(--border2);border-radius:var(--r);padding:8px 10px;font-size:14px;font-family:inherit;color:var(--text);background:var(--surface);outline:none;transition:border-color .15s}
-.ti:focus{border-color:#005bd3;box-shadow:0 0 0 2px rgba(0,91,211,.2)}
-.fh{font-size:12px;color:var(--t2)}
-.sv2{background:var(--mbg);border:1px solid var(--magic);border-radius:var(--r);padding:8px 10px;font-size:14px;color:var(--mt);line-height:1.5}
-.kt{display:inline-block;background:var(--s2);border:1px solid var(--border);border-radius:var(--rf);padding:2px 10px;font-size:12px;color:var(--t2);margin:2px}
-.ar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-top:10px;border-top:1px solid var(--border);flex-wrap:wrap}
-.ah{font-size:12px;color:var(--t2)}
-.lc{border:1px solid var(--border);border-radius:var(--rm);padding:16px;display:flex;align-items:center;gap:12px}
-.spin{width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--magic);border-radius:50%;animation:sp .7s linear infinite;flex-shrink:0}
-@keyframes sp{to{transform:rotate(360deg)}}
-.lt{font-size:14px;color:var(--t2)}
-.tws{position:fixed;bottom:24px;right:24px;z-index:300;display:flex;flex-direction:column;gap:8px}
-.toast{display:flex;align-items:center;gap:8px;padding:12px 16px;border-radius:var(--rm);font-size:14px;font-weight:500;box-shadow:0 4px 12px rgba(0,0,0,.15);animation:ti .2s ease;max-width:360px}
-@keyframes ti{from{transform:translateY(8px);opacity:0}to{transform:translateY(0);opacity:1}}
-.tok{background:#1a4731;color:#fff}.terr{background:#7b1111;color:#fff}.tdef{background:var(--fill);color:#fff}
-.empty{padding:48px 24px;text-align:center;color:var(--t2)}
-.ei{font-size:36px;margin-bottom:12px}
-.et{font-size:16px;font-weight:600;color:var(--text);margin-bottom:4px}
-.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:20px;box-shadow:var(--sh)}
-.card-title{font-size:15px;font-weight:600;margin-bottom:6px}
-.card-sub{font-size:13px;color:var(--t2);margin-bottom:16px;line-height:1.6}
-.sgrp{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);overflow:hidden;margin-bottom:20px}
-.sgh{padding:16px 20px;border-bottom:1px solid var(--border);background:var(--s2)}
-.sgt{font-size:15px;font-weight:600}
-.sgs{font-size:13px;color:var(--t2)}
-.sgb{padding:20px}
-.sgr{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);gap:16px}
-.sgr:last-child{border-bottom:none}
-.sgl{font-size:14px;font-weight:500}
-.sgh2{font-size:12px;color:var(--t2);margin-top:2px}
-.toggle{position:relative;width:44px;height:24px;flex-shrink:0}
-.toggle input{opacity:0;width:0;height:0;position:absolute}
-.tgl-track{position:absolute;inset:0;background:var(--border2);border-radius:var(--rf);cursor:pointer;transition:background .2s}
-.toggle input:checked+.tgl-track{background:var(--magic)}
-.tgl-thumb{position:absolute;width:20px;height:20px;background:#fff;border-radius:50%;top:2px;left:2px;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.2);pointer-events:none}
-.toggle input:checked~.tgl-thumb{transform:translateX(20px)}
-.kd{font-family:monospace;font-size:13px;background:var(--s2);border:1px solid var(--border);border-radius:var(--r);padding:6px 10px;color:var(--t2);flex:1;max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.chart-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
-.chart-label{font-size:12px;color:var(--t2);width:100px;flex-shrink:0;text-align:right}
-.chart-track{flex:1;height:26px;background:var(--s2);border-radius:var(--r);overflow:hidden}
-.chart-fill{height:100%;border-radius:var(--r);display:flex;align-items:center;padding-left:10px;font-size:12px;font-weight:500;color:#fff;transition:width .8s ease}
-.chart-val{font-size:12px;color:var(--t2);width:30px}
-.score-item{display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--s2);border-radius:var(--rm);border:1px solid var(--border);margin-bottom:8px}
-.score-name{font-size:13px;font-weight:500;width:140px;flex-shrink:0}
-.score-bar-wrap{flex:1;height:6px;background:var(--border);border-radius:var(--rf);overflow:hidden}
-.score-bar{height:6px;border-radius:var(--rf)}
-@media(max-width:860px){.frame{grid-template-columns:1fr}.nav{display:none}.sg{grid-template-columns:1fr 1fr}.cg{grid-template-columns:1fr}.page{padding:16px}}
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>TitleBoost AI — Shopify Optimizer</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0
+    }
+
+    :root {
+      --bg: #f1f1f1;
+      --surface: #fff;
+      --s2: #f7f7f7;
+      --fill: #303030;
+      --f2: #616161;
+      --f3: #8a8a8a;
+      --ok: #1a9e6a;
+      --okbg: #e3f1ec;
+      --okt: #1a7a52;
+      --bad: #c92a2a;
+      --badbg: #ffeaea;
+      --warn: #e07d00;
+      --wbg: #fff3cd;
+      --wt: #7d5500;
+      --magic: #7c3aed;
+      --mbg: #f2edff;
+      --mt: #4a1fb8;
+      --border: #e0e0e0;
+      --border2: #c9c9c9;
+      --text: #303030;
+      --t2: #616161;
+      --t3: #8a8a8a;
+      --r: 4px;
+      --rm: 8px;
+      --rl: 12px;
+      --rf: 9999px;
+      --sh: 0 1px 0 rgba(0, 0, 0, .05);
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 14px;
+      line-height: 1.5;
+      min-height: 100vh
+    }
+
+    .topbar {
+      background: var(--fill);
+      height: 56px;
+      display: flex;
+      align-items: center;
+      padding: 0 20px;
+      gap: 12px;
+      position: sticky;
+      top: 0;
+      z-index: 100
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #fff;
+      font-size: 15px;
+      font-weight: 600
+    }
+
+    .logo-icon {
+      width: 28px;
+      height: 28px;
+      background: #96bf48;
+      border-radius: var(--r);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px
+    }
+
+    .tdiv {
+      width: 1px;
+      height: 20px;
+      background: rgba(255, 255, 255, .2)
+    }
+
+    .tstore {
+      font-size: 13px;
+      color: rgba(255, 255, 255, .75);
+      font-weight: 500
+    }
+
+    .tsp {
+      flex: 1
+    }
+
+    .tpill {
+      background: rgba(255, 255, 255, .12);
+      border: 1px solid rgba(255, 255, 255, .2);
+      border-radius: var(--rf);
+      padding: 3px 10px;
+      font-size: 12px;
+      font-weight: 500;
+      color: rgba(255, 255, 255, .85)
+    }
+
+    .frame {
+      display: grid;
+      grid-template-columns: 240px 1fr;
+      min-height: calc(100vh - 56px)
+    }
+
+    .nav {
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      padding: 12px 0;
+      display: flex;
+      flex-direction: column
+    }
+
+    .nsec {
+      padding: 16px 16px 4px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--t3);
+      text-transform: uppercase;
+      letter-spacing: .06em
+    }
+
+    .ni {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 16px;
+      font-size: 14px;
+      color: var(--t2);
+      cursor: pointer;
+      border-left: 3px solid transparent;
+      transition: all .1s;
+      user-select: none
+    }
+
+    .ni:hover {
+      background: var(--s2);
+      color: var(--text)
+    }
+
+    .ni.active {
+      background: var(--mbg);
+      color: var(--mt);
+      border-left-color: var(--magic);
+      font-weight: 500
+    }
+
+    .nsep {
+      height: 1px;
+      background: var(--border);
+      margin: 8px 0
+    }
+
+    .nsp {
+      flex: 1
+    }
+
+    .usage {
+      margin: 12px;
+      background: var(--s2);
+      border: 1px solid var(--border);
+      border-radius: var(--rm);
+      padding: 12px
+    }
+
+    .urow {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px
+    }
+
+    .utitle {
+      font-size: 12px;
+      font-weight: 600
+    }
+
+    .uct {
+      font-size: 12px;
+      color: var(--t2)
+    }
+
+    .pbg {
+      height: 6px;
+      background: var(--border);
+      border-radius: var(--rf);
+      margin-bottom: 12px
+    }
+
+    .pf {
+      height: 6px;
+      background: var(--magic);
+      border-radius: var(--rf);
+      width: 36%;
+      transition: width .4s
+    }
+
+    .bup {
+      width: 100%;
+      background: var(--fill);
+      color: #fff;
+      border: none;
+      border-radius: var(--rm);
+      padding: 7px 12px;
+      font-size: 12px;
+      font-family: inherit;
+      font-weight: 500;
+      cursor: pointer
+    }
+
+    .bup:hover {
+      background: #1a1a1a
+    }
+
+    .page {
+      display: none;
+      padding: 24px 32px;
+      overflow-x: hidden;
+      min-width: 0;
+      animation: fi .2s ease
+    }
+
+    .page.active {
+      display: block
+    }
+
+    @keyframes fi {
+      from {
+        opacity: 0;
+        transform: translateY(6px)
+      }
+
+      to {
+        opacity: 1;
+        transform: none
+      }
+    }
+
+    .ph {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      gap: 16px
+    }
+
+    .ptitle {
+      font-size: 20px;
+      font-weight: 600;
+      letter-spacing: -.2px;
+      margin-bottom: 2px
+    }
+
+    .psub {
+      font-size: 14px;
+      color: var(--t2)
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 14px;
+      border-radius: var(--rm);
+      font-size: 14px;
+      font-family: inherit;
+      font-weight: 500;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all .12s;
+      white-space: nowrap;
+      line-height: 1.4
+    }
+
+    .bp {
+      background: var(--fill);
+      color: #fff;
+      border-color: var(--fill);
+      box-shadow: var(--sh), inset 0 -1px 0 rgba(0, 0, 0, .2)
+    }
+
+    .bp:hover {
+      background: #1a1a1a
+    }
+
+    .bp:disabled {
+      background: var(--f3);
+      border-color: var(--f3);
+      cursor: not-allowed;
+      box-shadow: none
+    }
+
+    .bs {
+      background: var(--surface);
+      color: var(--text);
+      border-color: var(--border2);
+      box-shadow: var(--sh), inset 0 -1px 0 rgba(0, 0, 0, .08)
+    }
+
+    .bs:hover {
+      background: var(--s2)
+    }
+
+    .bm {
+      background: var(--magic);
+      color: #fff;
+      border-color: var(--magic);
+      box-shadow: var(--sh), inset 0 -1px 0 rgba(0, 0, 0, .2)
+    }
+
+    .bm:hover {
+      background: #6d28d9
+    }
+
+    .bm:disabled {
+      background: #c4b5fd;
+      border-color: #c4b5fd;
+      cursor: not-allowed;
+      box-shadow: none
+    }
+
+    .banner {
+      border-radius: var(--rm);
+      padding: 14px 16px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border: 1px solid;
+      flex-wrap: wrap
+    }
+
+    .bwarn {
+      background: var(--wbg);
+      border-color: var(--warn)
+    }
+
+    .btitle {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 2px
+    }
+
+    .bsub {
+      font-size: 13px;
+      color: var(--t2)
+    }
+
+    .binput {
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: var(--r);
+      padding: 6px 10px;
+      font-size: 13px;
+      font-family: 'SF Mono', monospace;
+      color: var(--text);
+      outline: none;
+      min-width: 220px
+    }
+
+    .binput:focus {
+      border-color: #005bd3;
+      box-shadow: 0 0 0 2px rgba(0, 91, 211, .2)
+    }
+
+    .bcls {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 18px;
+      color: var(--t2);
+      padding: 2px 6px;
+      border-radius: var(--r);
+      line-height: 1
+    }
+
+    .sg {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 20px
+    }
+
+    .sc {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--rl);
+      box-shadow: var(--sh);
+      padding: 16px 20px
+    }
+
+    .sl {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--t3);
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      margin-bottom: 8px
+    }
+
+    .sv {
+      font-size: 28px;
+      font-weight: 600;
+      letter-spacing: -1px;
+      line-height: 1;
+      margin-bottom: 4px
+    }
+
+    .ss {
+      font-size: 12px;
+      color: var(--t2)
+    }
+
+    .filt {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--rl);
+      box-shadow: var(--sh);
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+      flex-wrap: wrap
+    }
+
+    .sw {
+      position: relative;
+      flex: 1;
+      min-width: 180px
+    }
+
+    .sw input {
+      width: 100%;
+      background: var(--s2);
+      border: 1px solid var(--border2);
+      border-radius: var(--r);
+      padding: 7px 10px 7px 30px;
+      font-size: 14px;
+      font-family: inherit;
+      color: var(--text);
+      outline: none
+    }
+
+    .sw input:focus {
+      border-color: #005bd3;
+      box-shadow: 0 0 0 2px rgba(0, 91, 211, .2);
+      background: var(--surface)
+    }
+
+    .si {
+      position: absolute;
+      left: 9px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--t3);
+      font-size: 13px;
+      pointer-events: none
+    }
+
+    .sel {
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: var(--r);
+      padding: 7px 26px 7px 10px;
+      font-size: 14px;
+      font-family: inherit;
+      color: var(--text);
+      outline: none;
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23616161' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 8px center
+    }
+
+    .spill {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--mt);
+      background: var(--mbg);
+      padding: 3px 10px;
+      border-radius: var(--rf);
+      display: none
+    }
+
+    .tw {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--rl);
+      box-shadow: var(--sh);
+      overflow: hidden;
+      margin-bottom: 24px
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse
+    }
+
+    thead tr {
+      background: var(--s2);
+      border-bottom: 1px solid var(--border)
+    }
+
+    th {
+      text-align: left;
+      padding: 10px 16px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--t2);
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      white-space: nowrap
+    }
+
+    th:first-child {
+      width: 44px;
+      padding-right: 0
+    }
+
+    tbody tr {
+      border-bottom: 1px solid var(--border);
+      transition: background .1s
+    }
+
+    tbody tr:last-child {
+      border-bottom: none
+    }
+
+    tbody tr:hover {
+      background: var(--s2)
+    }
+
+    tbody tr.sel-r {
+      background: var(--mbg)
+    }
+
+    td {
+      padding: 12px 16px;
+      vertical-align: middle
+    }
+
+    td:first-child {
+      padding-right: 0
+    }
+
+    input[type="checkbox"] {
+      width: 15px;
+      height: 15px;
+      accent-color: var(--magic);
+      cursor: pointer
+    }
+
+    .pc {
+      display: flex;
+      align-items: center;
+      gap: 12px
+    }
+
+    .pt2 {
+      width: 40px;
+      height: 40px;
+      border-radius: var(--r);
+      background: var(--s2);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0
+    }
+
+    .pn {
+      font-size: 14px;
+      font-weight: 500
+    }
+
+    .psk {
+      font-size: 12px;
+      color: var(--t2);
+      font-family: 'SF Mono', monospace
+    }
+
+    .tc {
+      font-size: 13px;
+      color: var(--t2);
+      max-width: 260px;
+      line-height: 1.4
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 2px 8px;
+      border-radius: var(--rf);
+      font-size: 12px;
+      font-weight: 500;
+      line-height: 1.6
+    }
+
+    .badge::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      display: inline-block;
+      flex-shrink: 0
+    }
+
+    .bok {
+      background: var(--okbg);
+      color: var(--okt)
+    }
+
+    .bok::before {
+      background: var(--ok)
+    }
+
+    .bdf {
+      background: var(--s2);
+      color: var(--t2);
+      border: 1px solid var(--border)
+    }
+
+    .bdf::before {
+      background: var(--f3)
+    }
+
+    .bma {
+      background: var(--mbg);
+      color: var(--mt)
+    }
+
+    .bma::before {
+      background: var(--magic)
+    }
+
+    .bwa {
+      background: var(--wbg);
+      color: var(--wt)
+    }
+
+    .bwa::before {
+      background: var(--warn)
+    }
+
+    .ct {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: var(--rf);
+      font-size: 12px;
+      font-weight: 500;
+      font-family: monospace
+    }
+
+    .cok {
+      background: var(--okbg);
+      color: var(--okt)
+    }
+
+    .cwn {
+      background: var(--wbg);
+      color: var(--wt)
+    }
+
+    .cbd {
+      background: var(--badbg);
+      color: var(--bad)
+    }
+
+    .rb {
+      background: none;
+      border: 1px solid var(--border2);
+      border-radius: var(--r);
+      padding: 5px 12px;
+      font-size: 13px;
+      font-family: inherit;
+      font-weight: 500;
+      color: var(--text);
+      cursor: pointer;
+      transition: all .1s
+    }
+
+    .rb:hover {
+      background: var(--s2);
+      border-color: var(--f3)
+    }
+
+    .pg {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 16px;
+      border-top: 1px solid var(--border);
+      background: var(--s2)
+    }
+
+    .pgi {
+      font-size: 13px;
+      color: var(--t2)
+    }
+
+    .pgb {
+      display: flex;
+      gap: 4px
+    }
+
+    .pgbtn {
+      min-width: 32px;
+      height: 32px;
+      border: 1px solid var(--border2);
+      border-radius: var(--r);
+      background: var(--surface);
+      font-size: 13px;
+      font-family: inherit;
+      color: var(--text);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 6px;
+      transition: background .1s
+    }
+
+    .pgbtn:hover {
+      background: var(--s2)
+    }
+
+    .pgbtn.act {
+      background: var(--fill);
+      color: #fff;
+      border-color: var(--fill)
+    }
+
+    .mo {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, .4);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+      padding: 24px
+    }
+
+    .mo.open {
+      display: flex
+    }
+
+    .modal {
+      background: var(--surface);
+      border-radius: var(--rl);
+      width: 100%;
+      max-width: 820px;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, .18)
+    }
+
+    .mh {
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0
+    }
+
+    .mht {
+      font-size: 16px;
+      font-weight: 600
+    }
+
+    .mc {
+      width: 32px;
+      height: 32px;
+      border: 1px solid var(--border2);
+      border-radius: var(--r);
+      background: var(--surface);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      color: var(--t2);
+      transition: background .1s
+    }
+
+    .mc:hover {
+      background: var(--s2)
+    }
+
+    .mb {
+      padding: 20px 24px;
+      overflow-y: auto;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 16px
+    }
+
+    .mf {
+      padding: 14px 24px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 10px;
+      flex-shrink: 0;
+      background: var(--s2)
+    }
+
+    .rc {
+      border: 1px solid var(--border);
+      border-radius: var(--rm);
+      overflow: hidden
+    }
+
+    .rh {
+      background: var(--s2);
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between
+    }
+
+    .rp {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 500
+    }
+
+    .rsk {
+      font-family: monospace;
+      font-size: 12px;
+      color: var(--t2);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      padding: 1px 6px
+    }
+
+    .rbody {
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px
+    }
+
+    .cg {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px
+    }
+
+    .cb {
+      border-radius: var(--r);
+      padding: 12px
+    }
+
+    .co {
+      background: var(--s2);
+      border: 1px solid var(--border)
+    }
+
+    .ca {
+      background: var(--mbg);
+      border: 1px solid var(--magic)
+    }
+
+    .clb {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      margin-bottom: 6px
+    }
+
+    .co .clb {
+      color: var(--t2)
+    }
+
+    .ca .clb {
+      color: var(--mt)
+    }
+
+    .ctx {
+      font-size: 14px;
+      color: var(--text);
+      line-height: 1.4
+    }
+
+    .ca .ctx {
+      color: var(--mt)
+    }
+
+    .cch {
+      font-size: 12px;
+      margin-top: 4px;
+      color: var(--t2);
+      font-family: monospace
+    }
+
+    .fg {
+      display: flex;
+      flex-direction: column;
+      gap: 4px
+    }
+
+    .fl {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--t2);
+      text-transform: uppercase;
+      letter-spacing: .05em
+    }
+
+    .ti {
+      width: 100%;
+      border: 1px solid var(--border2);
+      border-radius: var(--r);
+      padding: 8px 10px;
+      font-size: 14px;
+      font-family: inherit;
+      color: var(--text);
+      background: var(--surface);
+      outline: none;
+      transition: border-color .15s
+    }
+
+    .ti:focus {
+      border-color: #005bd3;
+      box-shadow: 0 0 0 2px rgba(0, 91, 211, .2)
+    }
+
+    .fh {
+      font-size: 12px;
+      color: var(--t2)
+    }
+
+    .sv2 {
+      background: var(--mbg);
+      border: 1px solid var(--magic);
+      border-radius: var(--r);
+      padding: 8px 10px;
+      font-size: 14px;
+      color: var(--mt);
+      line-height: 1.5
+    }
+
+    .kt {
+      display: inline-block;
+      background: var(--s2);
+      border: 1px solid var(--border);
+      border-radius: var(--rf);
+      padding: 2px 10px;
+      font-size: 12px;
+      color: var(--t2);
+      margin: 2px
+    }
+
+    .ar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding-top: 10px;
+      border-top: 1px solid var(--border);
+      flex-wrap: wrap
+    }
+
+    .ah {
+      font-size: 12px;
+      color: var(--t2)
+    }
+
+    .lc {
+      border: 1px solid var(--border);
+      border-radius: var(--rm);
+      padding: 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px
+    }
+
+    .spin {
+      width: 20px;
+      height: 20px;
+      border: 2px solid var(--border);
+      border-top-color: var(--magic);
+      border-radius: 50%;
+      animation: sp .7s linear infinite;
+      flex-shrink: 0
+    }
+
+    @keyframes sp {
+      to {
+        transform: rotate(360deg)
+      }
+    }
+
+    .lt {
+      font-size: 14px;
+      color: var(--t2)
+    }
+
+    .tws {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 300;
+      display: flex;
+      flex-direction: column;
+      gap: 8px
+    }
+
+    .toast {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 16px;
+      border-radius: var(--rm);
+      font-size: 14px;
+      font-weight: 500;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, .15);
+      animation: ti .2s ease;
+      max-width: 360px
+    }
+
+    @keyframes ti {
+      from {
+        transform: translateY(8px);
+        opacity: 0
+      }
+
+      to {
+        transform: translateY(0);
+        opacity: 1
+      }
+    }
+
+    .tok {
+      background: #1a4731;
+      color: #fff
+    }
+
+    .terr {
+      background: #7b1111;
+      color: #fff
+    }
+
+    .tdef {
+      background: var(--fill);
+      color: #fff
+    }
+
+    .empty {
+      padding: 48px 24px;
+      text-align: center;
+      color: var(--t2)
+    }
+
+    .ei {
+      font-size: 36px;
+      margin-bottom: 12px
+    }
+
+    .et {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 4px
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--rl);
+      padding: 20px;
+      box-shadow: var(--sh)
+    }
+
+    .card-title {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 6px
+    }
+
+    .card-sub {
+      font-size: 13px;
+      color: var(--t2);
+      margin-bottom: 16px;
+      line-height: 1.6
+    }
+
+    .sgrp {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--rl);
+      overflow: hidden;
+      margin-bottom: 20px
+    }
+
+    .sgh {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      background: var(--s2)
+    }
+
+    .sgt {
+      font-size: 15px;
+      font-weight: 600
+    }
+
+    .sgs {
+      font-size: 13px;
+      color: var(--t2)
+    }
+
+    .sgb {
+      padding: 20px
+    }
+
+    .sgr {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+      gap: 16px
+    }
+
+    .sgr:last-child {
+      border-bottom: none
+    }
+
+    .sgl {
+      font-size: 14px;
+      font-weight: 500
+    }
+
+    .sgh2 {
+      font-size: 12px;
+      color: var(--t2);
+      margin-top: 2px
+    }
+
+    .toggle {
+      position: relative;
+      width: 44px;
+      height: 24px;
+      flex-shrink: 0
+    }
+
+    .toggle input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+      position: absolute
+    }
+
+    .tgl-track {
+      position: absolute;
+      inset: 0;
+      background: var(--border2);
+      border-radius: var(--rf);
+      cursor: pointer;
+      transition: background .2s
+    }
+
+    .toggle input:checked+.tgl-track {
+      background: var(--magic)
+    }
+
+    .tgl-thumb {
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      background: #fff;
+      border-radius: 50%;
+      top: 2px;
+      left: 2px;
+      transition: transform .2s;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, .2);
+      pointer-events: none
+    }
+
+    .toggle input:checked~.tgl-thumb {
+      transform: translateX(20px)
+    }
+
+    .kd {
+      font-family: monospace;
+      font-size: 13px;
+      background: var(--s2);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: 6px 10px;
+      color: var(--t2);
+      flex: 1;
+      max-width: 300px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap
+    }
+
+    .chart-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px
+    }
+
+    .chart-label {
+      font-size: 12px;
+      color: var(--t2);
+      width: 100px;
+      flex-shrink: 0;
+      text-align: right
+    }
+
+    .chart-track {
+      flex: 1;
+      height: 26px;
+      background: var(--s2);
+      border-radius: var(--r);
+      overflow: hidden
+    }
+
+    .chart-fill {
+      height: 100%;
+      border-radius: var(--r);
+      display: flex;
+      align-items: center;
+      padding-left: 10px;
+      font-size: 12px;
+      font-weight: 500;
+      color: #fff;
+      transition: width .8s ease
+    }
+
+    .chart-val {
+      font-size: 12px;
+      color: var(--t2);
+      width: 30px
+    }
+
+    .score-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      background: var(--s2);
+      border-radius: var(--rm);
+      border: 1px solid var(--border);
+      margin-bottom: 8px
+    }
+
+    .score-name {
+      font-size: 13px;
+      font-weight: 500;
+      width: 140px;
+      flex-shrink: 0
+    }
+
+    .score-bar-wrap {
+      flex: 1;
+      height: 6px;
+      background: var(--border);
+      border-radius: var(--rf);
+      overflow: hidden
+    }
+
+    .score-bar {
+      height: 6px;
+      border-radius: var(--rf)
+    }
+
+    @media(max-width:860px) {
+      .frame {
+        grid-template-columns: 1fr
+      }
+
+      .nav {
+        display: none
+      }
+
+      .sg {
+        grid-template-columns: 1fr 1fr
+      }
+
+      .cg {
+        grid-template-columns: 1fr
+      }
+
+      .page {
+        padding: 16px
+      }
+    }
+  </style>
 </head>
+
 <body>
-<header class="topbar">
-  <div class="logo"><div class="logo-icon">🛍</div>TitleBoost AI</div>
-  <div class="tdiv"></div>
-  <div class="tstore" id="storeName">demo-store.myshopify.com</div>
-  <div class="tsp"></div>
-  <div class="tpill">Free Plan · GPT-4o</div>
-</header>
-<div class="frame">
-  <nav class="nav">
-    <div class="nsec">AI Tools</div>
-    <div class="ni active" onclick="goto('title')">✦ Title Optimizer</div>
-    <div class="ni" onclick="goto('meta')">📝 SEO Meta Editor</div>
-    <div class="ni" onclick="goto('tags')">🏷 Tag Suggester</div>
-    <div class="nsep"></div>
-    <div class="nsec">Reports</div>
-    <div class="ni" onclick="goto('analytics')">📊 Analytics</div>
-    <div class="ni" onclick="goto('seo')">📈 SEO Score</div>
-    <div class="nsep"></div>
-    <div class="nsec">Settings</div>
-    <div class="ni" onclick="goto('apikeys')">🔑 API Keys</div>
-    <div class="ni" onclick="goto('prefs')">⚙️ Preferences</div>
-    <div class="ni" onclick="goto('billing')">📦 Billing</div>
-    <div class="nsp"></div>
-    <div class="usage">
-      <div class="urow"><span class="utitle">Monthly usage</span><span class="uct" id="uct">0 / 50</span></div>
-      <div class="pbg"><div class="pf" id="ub"></div></div>
-      <button class="bup" onclick="goto('billing')">Upgrade to Unlimited</button>
+  <header class="topbar">
+    <div class="logo">
+      <div class="logo-icon">🛍</div>TitleBoost AI
     </div>
-  </nav>
-
-  <!-- PAGE: TITLE OPTIMIZER -->
-  <div class="page active" id="page-title">
-    <div class="banner bwarn" id="apiBanner">
-      <div style="flex:1;min-width:200px"><div class="btitle">OpenAI API key required</div><div class="bsub">Enter your key to enable AI — stored in session only.</div></div>
-      <div style="display:flex;gap:8px;align-items:center;flex-shrink:0;flex-wrap:wrap">
-        <input class="binput" type="password" id="apiKeyInput" placeholder="sk-proj-…"/>
-        <button class="btn bs" onclick="saveApiKey()" style="padding:6px 12px;font-size:13px">Save key</button>
+    <div class="tdiv"></div>
+    <div class="tstore" id="storeName">demo-store.myshopify.com</div>
+    <div class="tsp"></div>
+    <div class="tpill">Free Plan · GPT-4o</div>
+  </header>
+  <div class="frame">
+    <nav class="nav">
+      <div class="nsec">AI Tools</div>
+      <div class="ni active" onclick="goto('title')">✦ Title Optimizer</div>
+      <div class="ni" onclick="goto('meta')">📝 SEO Meta Editor</div>
+      <div class="ni" onclick="goto('tags')">🏷 Tag Suggester</div>
+      <div class="nsep"></div>
+      <div class="nsec">Reports</div>
+      <div class="ni" onclick="goto('analytics')">📊 Analytics</div>
+      <div class="ni" onclick="goto('seo')">📈 SEO Score</div>
+      <div class="nsep"></div>
+      <div class="nsec">Settings</div>
+      <div class="ni" onclick="goto('apikeys')">🔑 API Keys</div>
+      <div class="ni" onclick="goto('prefs')">⚙️ Preferences</div>
+      <div class="ni" onclick="goto('billing')">📦 Billing</div>
+      <div class="nsp"></div>
+      <div class="usage">
+        <div class="urow"><span class="utitle">Monthly usage</span><span class="uct" id="uct">0 / 50</span></div>
+        <div class="pbg">
+          <div class="pf" id="ub"></div>
+        </div>
+        <button class="bup" onclick="goto('billing')">Upgrade to Unlimited</button>
       </div>
-      <button class="bcls" onclick="this.closest('.banner').style.display='none'">×</button>
-    </div>
-    <div class="ph">
-      <div><div class="ptitle">Title Optimizer</div><div class="psub">Select products and let GPT-4o rewrite their titles</div></div>
-      <button class="btn bm" id="optBtn" onclick="openOptModal()" disabled>✦ Optimize selected</button>
-    </div>
-    <div class="sg">
-      <div class="sc"><div class="sl">Total products</div><div class="sv" id="totalCt">8</div><div class="ss">In your store</div></div>
-      <div class="sc"><div class="sl">Optimized</div><div class="sv" style="color:var(--okt)" id="optCt">2</div><div class="ss">This month</div></div>
-      <div class="sc"><div class="sl">Avg. title length</div><div class="sv" style="color:var(--wt)" id="avgLen">72</div><div class="ss">chars — above 70 recommended</div></div>
-    </div>
-    <div class="filt">
-      <div class="sw"><span class="si">🔍</span><input type="text" id="titleSearch" placeholder="Search products…" oninput="filterP(this.value)"/></div>
-      <select class="sel" onchange="filterSt(this.value)"><option value="">All statuses</option><option value="active">Active</option><option value="draft">Draft</option><option value="optimized">Optimized</option></select>
-      <select class="sel" onchange="filterCol(this.value)"><option value="">All collections</option><option value="Electronics">Electronics</option><option value="Apparel">Apparel</option><option value="Home">Home &amp; Living</option></select>
-      <div class="spill" id="spill">0 selected</div>
-    </div>
-    <div class="tw">
-      <table><thead><tr>
-        <th><input type="checkbox" id="chkAll" onchange="togAll(this.checked)"/></th>
-        <th>Product</th><th>Current title</th><th>Chars</th><th>Status</th><th></th>
-      </tr></thead><tbody id="ptable"></tbody></table>
-      <div class="pg">
-        <span class="pgi" id="pgInfo">Showing 1–8 of 8</span>
-        <div class="pgb">
-          <button class="pgbtn" onclick="chPg(-1)">←</button>
-          <button class="pgbtn act" id="pg1" onclick="goP(1)">1</button>
-          <button class="pgbtn" id="pg2" onclick="goP(2)" style="display:none">2</button>
-          <button class="pgbtn" onclick="chPg(1)">→</button>
+    </nav>
+
+    <!-- PAGE: TITLE OPTIMIZER -->
+    <div class="page active" id="page-title">
+      <div class="banner bwarn" id="apiBanner">
+        <div style="flex:1;min-width:200px">
+          <div class="btitle">OpenAI API key required</div>
+          <div class="bsub">Enter your key to enable AI — stored in session only.</div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;flex-shrink:0;flex-wrap:wrap">
+          <input class="binput" type="password" id="apiKeyInput" placeholder="sk-proj-…" />
+          <button class="btn bs" onclick="saveApiKey()" style="padding:6px 12px;font-size:13px">Save key</button>
+        </div>
+        <button class="bcls" onclick="this.closest('.banner').style.display='none'">×</button>
+      </div>
+      <div class="ph">
+        <div>
+          <div class="ptitle">Title Optimizer</div>
+          <div class="psub">Select products and let GPT-4o rewrite their titles</div>
+        </div>
+        <button class="btn bm" id="optBtn" onclick="openOptModal()" disabled>✦ Optimize selected</button>
+      </div>
+      <div class="sg">
+        <div class="sc">
+          <div class="sl">Total products</div>
+          <div class="sv" id="totalCt">8</div>
+          <div class="ss">In your store</div>
+        </div>
+        <div class="sc">
+          <div class="sl">Optimized</div>
+          <div class="sv" style="color:var(--okt)" id="optCt">2</div>
+          <div class="ss">This month</div>
+        </div>
+        <div class="sc">
+          <div class="sl">Avg. title length</div>
+          <div class="sv" style="color:var(--wt)" id="avgLen">72</div>
+          <div class="ss">chars — above 70 recommended</div>
         </div>
       </div>
-    </div>
-  </div>
-
-  <!-- PAGE: SEO META EDITOR -->
-  <div class="page" id="page-meta">
-    <div class="ph">
-      <div><div class="ptitle">SEO Meta Editor</div><div class="psub">Edit meta titles and descriptions for all products</div></div>
-      <button class="btn bm" onclick="showToast('All meta data saved!','ok')">💾 Save all changes</button>
-    </div>
-    <div class="filt">
-      <div class="sw"><span class="si">🔍</span><input type="text" placeholder="Search products…" oninput="filterMeta(this.value)"/></div>
-      <select class="sel" onchange="filterMetaSt(this.value)"><option value="">All statuses</option><option value="active">Active</option><option value="draft">Draft</option></select>
-    </div>
-    <div id="metaList"></div>
-  </div>
-
-  <!-- PAGE: TAG SUGGESTER -->
-  <div class="page" id="page-tags">
-    <div class="ph">
-      <div><div class="ptitle">Tag Suggester</div><div class="psub">AI-powered tags to improve product discoverability</div></div>
-      <button class="btn bm" onclick="suggestAllTags()">✦ Suggest tags for all</button>
-    </div>
-    <div id="tagList"></div>
-  </div>
-
-  <!-- PAGE: ANALYTICS -->
-  <div class="page" id="page-analytics">
-    <div class="ph">
-      <div><div class="ptitle">Analytics</div><div class="psub">Track your optimization performance</div></div>
-      <select class="sel"><option>Last 30 days</option><option>Last 7 days</option><option>Last 90 days</option></select>
-    </div>
-    <div class="sg">
-      <div class="sc"><div class="sl">Titles optimized</div><div class="sv" style="color:var(--okt)" id="anOpt">2</div><div class="ss">↑ 12% vs last month</div></div>
-      <div class="sc"><div class="sl">Avg. SEO score</div><div class="sv" style="color:var(--magic)" id="anSEO">74</div><div class="ss">↑ 8 points improvement</div></div>
-      <div class="sc"><div class="sl">Credits used</div><div class="sv" id="anCr">2<span style="font-size:14px;color:var(--t2)">/50</span></div><div class="ss">48 remaining this month</div></div>
-    </div>
-    <div class="tw" style="margin-bottom:20px">
-      <div style="padding:16px 20px;border-bottom:1px solid var(--border);font-weight:600;font-size:14px">Optimizations by collection</div>
-      <div style="padding:20px" id="analyticsChart"></div>
-    </div>
-    <div class="tw">
-      <div style="padding:16px 20px;border-bottom:1px solid var(--border);font-weight:600;font-size:14px">Recent activity</div>
-      <table><thead><tr><th>Product</th><th>Action</th><th>Before</th><th>After</th><th>Date</th></tr></thead>
-      <tbody id="actLog"></tbody></table>
-    </div>
-  </div>
-
-  <!-- PAGE: SEO SCORE -->
-  <div class="page" id="page-seo">
-    <div class="ph">
-      <div><div class="ptitle">SEO Score</div><div class="psub">Detailed SEO health for all your products</div></div>
-      <button class="btn bm" onclick="recalcSEO()">↺ Recalculate scores</button>
-    </div>
-    <div style="display:grid;grid-template-columns:260px 1fr;gap:20px;align-items:start">
-      <div class="sc" style="text-align:center;padding:24px">
-        <div style="position:relative;width:140px;height:140px;margin:0 auto 16px">
-          <svg width="140" height="140" viewBox="0 0 140 140" style="transform:rotate(-90deg)">
-            <circle cx="70" cy="70" r="58" fill="none" stroke="var(--border)" stroke-width="12"/>
-            <circle cx="70" cy="70" r="58" fill="none" stroke="var(--magic)" stroke-width="12" stroke-dasharray="364" stroke-dashoffset="100" stroke-linecap="round" id="scoreCircle"/>
-          </svg>
-          <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:600" id="scoreNum">73</div>
-        </div>
-        <div style="font-size:13px;color:var(--t2)">Overall SEO Score<br><span style="font-size:11px">out of 100</span></div>
+      <div class="filt">
+        <div class="sw"><span class="si">🔍</span><input type="text" id="titleSearch" placeholder="Search products…"
+            oninput="filterP(this.value)" /></div>
+        <select class="sel" onchange="filterSt(this.value)">
+          <option value="">All statuses</option>
+          <option value="active">Active</option>
+          <option value="draft">Draft</option>
+          <option value="optimized">Optimized</option>
+        </select>
+        <select class="sel" onchange="filterCol(this.value)">
+          <option value="">All collections</option>
+          <option value="Electronics">Electronics</option>
+          <option value="Apparel">Apparel</option>
+          <option value="Home">Home &amp; Living</option>
+        </select>
+        <div class="spill" id="spill">0 selected</div>
       </div>
-      <div class="tw" style="margin-bottom:0">
-        <div style="padding:16px;border-bottom:1px solid var(--border);font-weight:600;font-size:14px">Score breakdown</div>
-        <div style="padding:16px" id="scoreBreakdown"></div>
-      </div>
-    </div>
-    <div style="margin-top:20px">
       <div class="tw">
-        <div style="padding:16px 20px;border-bottom:1px solid var(--border);font-weight:600;font-size:14px">Products needing attention</div>
-        <table><thead><tr><th>Product</th><th>SEO Score</th><th>Issues</th><th></th></tr></thead>
-        <tbody id="seoTable"></tbody></table>
-      </div>
-    </div>
-  </div>
-
-  <!-- PAGE: API KEYS -->
-  <div class="page" id="page-apikeys">
-    <div class="ph"><div><div class="ptitle">API Keys</div><div class="psub">Manage your connected API keys</div></div></div>
-    <div class="sgrp">
-      <div class="sgh"><div class="sgt">OpenAI</div><div class="sgs">Powers title optimization, meta descriptions, and tag suggestions</div></div>
-      <div class="sgb">
-        <div class="sgr">
-          <div><div class="sgl">API Key</div><div class="sgh2">Your sk-proj-… key from platform.openai.com</div></div>
-          <div style="display:flex;gap:8px;align-items:center">
-            <div class="kd" id="keyDisplay">Not set</div>
-            <button class="btn bs" onclick="editKey()" style="font-size:12px;padding:5px 10px">Edit</button>
+        <table>
+          <thead>
+            <tr>
+              <th><input type="checkbox" id="chkAll" onchange="togAll(this.checked)" /></th>
+              <th>Product</th>
+              <th>Current title</th>
+              <th>Chars</th>
+              <th>Status</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="ptable"></tbody>
+        </table>
+        <div class="pg">
+          <span class="pgi" id="pgInfo">Showing 1–8 of 8</span>
+          <div class="pgb">
+            <button class="pgbtn" onclick="chPg(-1)">←</button>
+            <button class="pgbtn act" id="pg1" onclick="goP(1)">1</button>
+            <button class="pgbtn" id="pg2" onclick="goP(2)" style="display:none">2</button>
+            <button class="pgbtn" onclick="chPg(1)">→</button>
           </div>
         </div>
-        <div class="sgr">
-          <div><div class="sgl">Model</div><div class="sgh2">GPT model to use for generation</div></div>
-          <select class="sel" id="modelSel"><option value="gpt-4o">GPT-4o (recommended)</option><option value="gpt-4o-mini">GPT-4o Mini (faster)</option><option value="gpt-3.5-turbo">GPT-3.5 Turbo (budget)</option></select>
+      </div>
+    </div>
+
+    <!-- PAGE: SEO META EDITOR -->
+    <div class="page" id="page-meta">
+      <div class="ph">
+        <div>
+          <div class="ptitle">SEO Meta Editor</div>
+          <div class="psub">Edit meta titles and descriptions for all products</div>
         </div>
-        <div class="sgr">
-          <div><div class="sgl">Connection status</div></div>
-          <span class="badge bdf" id="apiStatus">Not connected</span>
+        <button class="btn bm" onclick="showToast('All meta data saved!','ok')">💾 Save all changes</button>
+      </div>
+      <div class="filt">
+        <div class="sw"><span class="si">🔍</span><input type="text" placeholder="Search products…"
+            oninput="filterMeta(this.value)" /></div>
+        <select class="sel" onchange="filterMetaSt(this.value)">
+          <option value="">All statuses</option>
+          <option value="active">Active</option>
+          <option value="draft">Draft</option>
+        </select>
+      </div>
+      <div id="metaList"></div>
+    </div>
+
+    <!-- PAGE: TAG SUGGESTER -->
+    <div class="page" id="page-tags">
+      <div class="ph">
+        <div>
+          <div class="ptitle">Tag Suggester</div>
+          <div class="psub">AI-powered tags to improve product discoverability</div>
         </div>
-        <div style="margin-top:16px;display:flex;gap:8px">
-          <button class="btn bm" onclick="testAPIKey()">Test connection</button>
-          <button class="btn bs" onclick="clearKey()">Clear key</button>
+        <button class="btn bm" onclick="suggestAllTags()">✦ Suggest tags for all</button>
+      </div>
+      <div id="tagList"></div>
+    </div>
+
+    <!-- PAGE: ANALYTICS -->
+    <div class="page" id="page-analytics">
+      <div class="ph">
+        <div>
+          <div class="ptitle">Analytics</div>
+          <div class="psub">Track your optimization performance</div>
+        </div>
+        <select class="sel">
+          <option>Last 30 days</option>
+          <option>Last 7 days</option>
+          <option>Last 90 days</option>
+        </select>
+      </div>
+      <div class="sg">
+        <div class="sc">
+          <div class="sl">Titles optimized</div>
+          <div class="sv" style="color:var(--okt)" id="anOpt">2</div>
+          <div class="ss">↑ 12% vs last month</div>
+        </div>
+        <div class="sc">
+          <div class="sl">Avg. SEO score</div>
+          <div class="sv" style="color:var(--magic)" id="anSEO">74</div>
+          <div class="ss">↑ 8 points improvement</div>
+        </div>
+        <div class="sc">
+          <div class="sl">Credits used</div>
+          <div class="sv" id="anCr">2<span style="font-size:14px;color:var(--t2)">/50</span></div>
+          <div class="ss">48 remaining this month</div>
+        </div>
+      </div>
+      <div class="tw" style="margin-bottom:20px">
+        <div style="padding:16px 20px;border-bottom:1px solid var(--border);font-weight:600;font-size:14px">
+          Optimizations by collection</div>
+        <div style="padding:20px" id="analyticsChart"></div>
+      </div>
+      <div class="tw">
+        <div style="padding:16px 20px;border-bottom:1px solid var(--border);font-weight:600;font-size:14px">Recent
+          activity</div>
+        <table>
+          <thead>
+            <tr>
+              <th>Product</th>
+              <th>Action</th>
+              <th>Before</th>
+              <th>After</th>
+              <th>Date</th>
+            </tr>
+          </thead>
+          <tbody id="actLog"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- PAGE: SEO SCORE -->
+    <div class="page" id="page-seo">
+      <div class="ph">
+        <div>
+          <div class="ptitle">SEO Score</div>
+          <div class="psub">Detailed SEO health for all your products</div>
+        </div>
+        <button class="btn bm" onclick="recalcSEO()">↺ Recalculate scores</button>
+      </div>
+      <div style="display:grid;grid-template-columns:260px 1fr;gap:20px;align-items:start">
+        <div class="sc" style="text-align:center;padding:24px">
+          <div style="position:relative;width:140px;height:140px;margin:0 auto 16px">
+            <svg width="140" height="140" viewBox="0 0 140 140" style="transform:rotate(-90deg)">
+              <circle cx="70" cy="70" r="58" fill="none" stroke="var(--border)" stroke-width="12" />
+              <circle cx="70" cy="70" r="58" fill="none" stroke="var(--magic)" stroke-width="12" stroke-dasharray="364"
+                stroke-dashoffset="100" stroke-linecap="round" id="scoreCircle" />
+            </svg>
+            <div
+              style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:600"
+              id="scoreNum">73</div>
+          </div>
+          <div style="font-size:13px;color:var(--t2)">Overall SEO Score<br><span style="font-size:11px">out of
+              100</span></div>
+        </div>
+        <div class="tw" style="margin-bottom:0">
+          <div style="padding:16px;border-bottom:1px solid var(--border);font-weight:600;font-size:14px">Score breakdown
+          </div>
+          <div style="padding:16px" id="scoreBreakdown"></div>
+        </div>
+      </div>
+      <div style="margin-top:20px">
+        <div class="tw">
+          <div style="padding:16px 20px;border-bottom:1px solid var(--border);font-weight:600;font-size:14px">Products
+            needing attention</div>
+          <table>
+            <thead>
+              <tr>
+                <th>Product</th>
+                <th>SEO Score</th>
+                <th>Issues</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="seoTable"></tbody>
+          </table>
         </div>
       </div>
     </div>
-    <div class="sgrp">
-      <div class="sgh"><div class="sgt">Shopify</div><div class="sgs">Required to read and update your store products</div></div>
-      <div class="sgb">
-        <div class="sgr">
-          <div><div class="sgl">Store URL</div><div class="sgh2">Your myshopify.com domain</div></div>
-          <input class="ti" id="shopifyStore" placeholder="yourstore.myshopify.com" style="max-width:280px" oninput="document.getElementById('storeName').textContent=this.value||'demo-store.myshopify.com'"/>
+
+    <!-- PAGE: API KEYS -->
+    <div class="page" id="page-apikeys">
+      <div class="ph">
+        <div>
+          <div class="ptitle">API Keys</div>
+          <div class="psub">Manage your connected API keys</div>
         </div>
-        <div class="sgr">
-          <div><div class="sgl">Access Token</div><div class="sgh2">Admin API access token from your Shopify app</div></div>
-          <input class="ti" type="password" id="shopifyToken" placeholder="shpat_…" style="max-width:280px"/>
+      </div>
+      <div class="sgrp">
+        <div class="sgh">
+          <div class="sgt">OpenAI</div>
+          <div class="sgs">Powers title optimization, meta descriptions, and tag suggestions</div>
         </div>
-        <div style="margin-top:16px"><button class="btn bp" onclick="saveShopify()">Save Shopify settings</button></div>
+        <div class="sgb">
+          <div class="sgr">
+            <div>
+              <div class="sgl">API Key</div>
+              <div class="sgh2">Your sk-proj-… key from platform.openai.com</div>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <div class="kd" id="keyDisplay">Not set</div>
+              <button class="btn bs" onclick="editKey()" style="font-size:12px;padding:5px 10px">Edit</button>
+            </div>
+          </div>
+          <div class="sgr">
+            <div>
+              <div class="sgl">Model</div>
+              <div class="sgh2">GPT model to use for generation</div>
+            </div>
+            <select class="sel" id="modelSel">
+              <option value="gpt-4o">GPT-4o (recommended)</option>
+              <option value="gpt-4o-mini">GPT-4o Mini (faster)</option>
+              <option value="gpt-3.5-turbo">GPT-3.5 Turbo (budget)</option>
+            </select>
+          </div>
+          <div class="sgr">
+            <div>
+              <div class="sgl">Connection status</div>
+            </div>
+            <span class="badge bdf" id="apiStatus">Not connected</span>
+          </div>
+          <div style="margin-top:16px;display:flex;gap:8px">
+            <button class="btn bm" onclick="testAPIKey()">Test connection</button>
+            <button class="btn bs" onclick="clearKey()">Clear key</button>
+          </div>
+        </div>
+      </div>
+      <div class="sgrp">
+        <div class="sgh">
+          <div class="sgt">Shopify</div>
+          <div class="sgs">Required to read and update your store products</div>
+        </div>
+        <div class="sgb">
+          <div class="sgr">
+            <div>
+              <div class="sgl">Store URL</div>
+              <div class="sgh2">Your myshopify.com domain</div>
+            </div>
+            <input class="ti" id="shopifyStore" placeholder="yourstore.myshopify.com" style="max-width:280px"
+              oninput="document.getElementById('storeName').textContent=this.value||'demo-store.myshopify.com'" />
+          </div>
+          <div class="sgr">
+            <div>
+              <div class="sgl">Access Token</div>
+              <div class="sgh2">Admin API access token from your Shopify app</div>
+            </div>
+            <input class="ti" type="password" id="shopifyToken" placeholder="shpat_…" style="max-width:280px" />
+          </div>
+          <div style="margin-top:16px"><button class="btn bp" onclick="saveShopify()">Save Shopify settings</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE: PREFERENCES -->
+    <div class="page" id="page-prefs">
+      <div class="ph">
+        <div>
+          <div class="ptitle">Preferences</div>
+          <div class="psub">Customize how TitleBoost AI works for you</div>
+        </div>
+      </div>
+      <div class="sgrp">
+        <div class="sgh">
+          <div class="sgt">Title generation</div>
+        </div>
+        <div class="sgb">
+          <div class="sgr">
+            <div>
+              <div class="sgl">Max title length</div>
+              <div class="sgh2">AI will keep titles under this limit</div>
+            </div>
+            <select class="sel">
+              <option>60 characters</option>
+              <option selected>70 characters</option>
+              <option>80 characters</option>
+            </select>
+          </div>
+          <div class="sgr">
+            <div>
+              <div class="sgl">Include emojis in titles</div>
+              <div class="sgh2">Add relevant emojis to stand out</div>
+            </div>
+            <label class="toggle"><input type="checkbox" />
+              <div class="tgl-track"></div>
+              <div class="tgl-thumb"></div>
+            </label>
+          </div>
+          <div class="sgr">
+            <div>
+              <div class="sgl">Auto-suggest meta description</div>
+              <div class="sgh2">Generate meta alongside every title</div>
+            </div>
+            <label class="toggle"><input type="checkbox" checked />
+              <div class="tgl-track"></div>
+              <div class="tgl-thumb"></div>
+            </label>
+          </div>
+          <div class="sgr">
+            <div>
+              <div class="sgl">Keyword strategy</div>
+              <div class="sgh2">Primary SEO strategy for rewrites</div>
+            </div>
+            <select class="sel">
+              <option>Conversion-focused</option>
+              <option>SEO-focused</option>
+              <option>Balanced</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="sgrp">
+        <div class="sgh">
+          <div class="sgt">Notifications</div>
+        </div>
+        <div class="sgb">
+          <div class="sgr">
+            <div>
+              <div class="sgl">Monthly usage alerts</div>
+              <div class="sgh2">Notify when you hit 80% of limit</div>
+            </div>
+            <label class="toggle"><input type="checkbox" checked />
+              <div class="tgl-track"></div>
+              <div class="tgl-thumb"></div>
+            </label>
+          </div>
+          <div class="sgr">
+            <div>
+              <div class="sgl">Weekly optimization reports</div>
+              <div class="sgh2">Email summary of optimizations</div>
+            </div>
+            <label class="toggle"><input type="checkbox" />
+              <div class="tgl-track"></div>
+              <div class="tgl-thumb"></div>
+            </label>
+          </div>
+        </div>
+      </div>
+      <button class="btn bm" onclick="showToast('Preferences saved!','ok')">Save preferences</button>
+    </div>
+
+    <!-- PAGE: BILLING -->
+    <div class="page" id="page-billing">
+      <div class="ph">
+        <div>
+          <div class="ptitle">Billing &amp; Plans</div>
+          <div class="psub">Manage your subscription and usage</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px">
+        <div class="card" style="border:2px solid var(--border)">
+          <div class="card-title">Free</div>
+          <div style="font-size:28px;font-weight:600;margin-bottom:4px">$0<span
+              style="font-size:14px;font-weight:400;color:var(--t2)">/mo</span></div>
+          <div class="card-sub">50 optimizations/month<br>Title optimizer only<br>Basic SEO scoring</div>
+          <span class="badge bok">Current plan</span>
+        </div>
+        <div class="card" style="border:2px solid var(--magic)">
+          <div
+            style="font-size:11px;font-weight:600;color:var(--mt);background:var(--mbg);display:inline-block;padding:2px 8px;border-radius:var(--rf);margin-bottom:8px">
+            MOST POPULAR</div>
+          <div class="card-title">Pro</div>
+          <div style="font-size:28px;font-weight:600;margin-bottom:4px">$9.99<span
+              style="font-size:14px;font-weight:400;color:var(--t2)">/mo</span></div>
+          <div class="card-sub">Unlimited optimizations<br>All AI tools included<br>Priority support</div>
+          <button class="btn bm" style="width:100%;margin-top:4px"
+            onclick="showToast('Redirecting to checkout…','def')">Upgrade to Pro</button>
+        </div>
+        <div class="card">
+          <div class="card-title">Enterprise</div>
+          <div style="font-size:28px;font-weight:600;margin-bottom:4px">$29.99<span
+              style="font-size:14px;font-weight:400;color:var(--t2)">/mo</span></div>
+          <div class="card-sub">Everything in Pro<br>Multi-store support<br>Dedicated account manager</div>
+          <button class="btn bp" style="width:100%;margin-top:4px"
+            onclick="showToast('Contact sales@titleboost.ai','def')">Contact sales</button>
+        </div>
+      </div>
+      <div class="sgrp">
+        <div class="sgh">
+          <div class="sgt">Usage this month</div>
+        </div>
+        <div class="sgb">
+          <div class="sgr">
+            <div>
+              <div class="sgl">Title optimizations</div>
+            </div><span id="bilOpt">2 / 50</span>
+          </div>
+          <div class="sgr">
+            <div>
+              <div class="sgl">Meta descriptions generated</div>
+            </div><span>0 / 50</span>
+          </div>
+          <div class="sgr">
+            <div>
+              <div class="sgl">Tag suggestions</div>
+            </div><span>0 / 50</span>
+          </div>
+          <div class="sgr">
+            <div>
+              <div class="sgl">Billing period resets</div>
+            </div><span>May 1, 2026</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /frame -->
+
+  <!-- OPTIMIZE MODAL -->
+  <div class="mo" id="optModal">
+    <div class="modal">
+      <div class="mh">
+        <div class="mht" id="mTitle">AI Title Optimization</div><button class="mc"
+          onclick="closeMo('optModal')">×</button>
+      </div>
+      <div class="mb" id="mBody"></div>
+      <div class="mf">
+        <button class="btn bs" onclick="closeMo('optModal')">Cancel</button>
+        <button class="btn bs" id="regenBtn" onclick="regenAll()" style="display:none">↺ Regenerate all</button>
+        <button class="btn bm" id="applyAllBtn" onclick="applyAll()" style="display:none">✓ Apply all to
+          Shopify</button>
       </div>
     </div>
   </div>
 
-  <!-- PAGE: PREFERENCES -->
-  <div class="page" id="page-prefs">
-    <div class="ph"><div><div class="ptitle">Preferences</div><div class="psub">Customize how TitleBoost AI works for you</div></div></div>
-    <div class="sgrp">
-      <div class="sgh"><div class="sgt">Title generation</div></div>
-      <div class="sgb">
-        <div class="sgr">
-          <div><div class="sgl">Max title length</div><div class="sgh2">AI will keep titles under this limit</div></div>
-          <select class="sel"><option>60 characters</option><option selected>70 characters</option><option>80 characters</option></select>
-        </div>
-        <div class="sgr">
-          <div><div class="sgl">Include emojis in titles</div><div class="sgh2">Add relevant emojis to stand out</div></div>
-          <label class="toggle"><input type="checkbox"/><div class="tgl-track"></div><div class="tgl-thumb"></div></label>
-        </div>
-        <div class="sgr">
-          <div><div class="sgl">Auto-suggest meta description</div><div class="sgh2">Generate meta alongside every title</div></div>
-          <label class="toggle"><input type="checkbox" checked/><div class="tgl-track"></div><div class="tgl-thumb"></div></label>
-        </div>
-        <div class="sgr">
-          <div><div class="sgl">Keyword strategy</div><div class="sgh2">Primary SEO strategy for rewrites</div></div>
-          <select class="sel"><option>Conversion-focused</option><option>SEO-focused</option><option>Balanced</option></select>
-        </div>
+  <!-- TAG MODAL -->
+  <div class="mo" id="tagModal">
+    <div class="modal">
+      <div class="mh">
+        <div class="mht" id="tagMTitle">Tag suggestions</div><button class="mc" onclick="closeMo('tagModal')">×</button>
       </div>
-    </div>
-    <div class="sgrp">
-      <div class="sgh"><div class="sgt">Notifications</div></div>
-      <div class="sgb">
-        <div class="sgr">
-          <div><div class="sgl">Monthly usage alerts</div><div class="sgh2">Notify when you hit 80% of limit</div></div>
-          <label class="toggle"><input type="checkbox" checked/><div class="tgl-track"></div><div class="tgl-thumb"></div></label>
-        </div>
-        <div class="sgr">
-          <div><div class="sgl">Weekly optimization reports</div><div class="sgh2">Email summary of optimizations</div></div>
-          <label class="toggle"><input type="checkbox"/><div class="tgl-track"></div><div class="tgl-thumb"></div></label>
-        </div>
-      </div>
-    </div>
-    <button class="btn bm" onclick="showToast('Preferences saved!','ok')">Save preferences</button>
-  </div>
-
-  <!-- PAGE: BILLING -->
-  <div class="page" id="page-billing">
-    <div class="ph"><div><div class="ptitle">Billing &amp; Plans</div><div class="psub">Manage your subscription and usage</div></div></div>
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px">
-      <div class="card" style="border:2px solid var(--border)">
-        <div class="card-title">Free</div>
-        <div style="font-size:28px;font-weight:600;margin-bottom:4px">$0<span style="font-size:14px;font-weight:400;color:var(--t2)">/mo</span></div>
-        <div class="card-sub">50 optimizations/month<br>Title optimizer only<br>Basic SEO scoring</div>
-        <span class="badge bok">Current plan</span>
-      </div>
-      <div class="card" style="border:2px solid var(--magic)">
-        <div style="font-size:11px;font-weight:600;color:var(--mt);background:var(--mbg);display:inline-block;padding:2px 8px;border-radius:var(--rf);margin-bottom:8px">MOST POPULAR</div>
-        <div class="card-title">Pro</div>
-        <div style="font-size:28px;font-weight:600;margin-bottom:4px">$9.99<span style="font-size:14px;font-weight:400;color:var(--t2)">/mo</span></div>
-        <div class="card-sub">Unlimited optimizations<br>All AI tools included<br>Priority support</div>
-        <button class="btn bm" style="width:100%;margin-top:4px" onclick="showToast('Redirecting to checkout…','def')">Upgrade to Pro</button>
-      </div>
-      <div class="card">
-        <div class="card-title">Enterprise</div>
-        <div style="font-size:28px;font-weight:600;margin-bottom:4px">$29.99<span style="font-size:14px;font-weight:400;color:var(--t2)">/mo</span></div>
-        <div class="card-sub">Everything in Pro<br>Multi-store support<br>Dedicated account manager</div>
-        <button class="btn bp" style="width:100%;margin-top:4px" onclick="showToast('Contact sales@titleboost.ai','def')">Contact sales</button>
-      </div>
-    </div>
-    <div class="sgrp">
-      <div class="sgh"><div class="sgt">Usage this month</div></div>
-      <div class="sgb">
-        <div class="sgr"><div><div class="sgl">Title optimizations</div></div><span id="bilOpt">2 / 50</span></div>
-        <div class="sgr"><div><div class="sgl">Meta descriptions generated</div></div><span>0 / 50</span></div>
-        <div class="sgr"><div><div class="sgl">Tag suggestions</div></div><span>0 / 50</span></div>
-        <div class="sgr"><div><div class="sgl">Billing period resets</div></div><span>May 1, 2026</span></div>
+      <div class="mb" id="tagMBody"></div>
+      <div class="mf">
+        <button class="btn bs" onclick="closeMo('tagModal')">Cancel</button>
+        <button class="btn bm" id="applyTagsBtn" onclick="applyTags()" style="display:none">✓ Apply selected
+          tags</button>
       </div>
     </div>
   </div>
 
-</div><!-- /frame -->
+  <div class="tws" id="tws"></div>
 
-<!-- OPTIMIZE MODAL -->
-<div class="mo" id="optModal">
-  <div class="modal">
-    <div class="mh"><div class="mht" id="mTitle">AI Title Optimization</div><button class="mc" onclick="closeMo('optModal')">×</button></div>
-    <div class="mb" id="mBody"></div>
-    <div class="mf">
-      <button class="btn bs" onclick="closeMo('optModal')">Cancel</button>
-      <button class="btn bs" id="regenBtn" onclick="regenAll()" style="display:none">↺ Regenerate all</button>
-      <button class="btn bm" id="applyAllBtn" onclick="applyAll()" style="display:none">✓ Apply all to Shopify</button>
-    </div>
-  </div>
-</div>
+  <script>
+    const PRODUCTS = [
+      { id: 1, name: "BT-900X", title: "Wireless Headphones Black 2024 Model Noise Cancelling Over Ear Premium", sku: "HP-001", emoji: "🎧", status: "active", collection: "Electronics", optimized: false, tags: ["headphones", "wireless", "noise cancelling"], metaTitle: "", metaDesc: "", seoScore: 62 },
+      { id: 2, name: "CoolBreeze X3", title: "Portable Air Conditioner Fan Humidifier Evaporative Desktop USB White", sku: "AC-220", emoji: "🌀", status: "active", collection: "Electronics", optimized: false, tags: ["fan", "air conditioner", "desktop"], metaTitle: "", metaDesc: "", seoScore: 55 },
+      { id: 3, name: "Runner Pro 12", title: "Running Shoes Men's Lightweight Breathable Sport Athletic Gym", sku: "SH-412", emoji: "👟", status: "active", collection: "Apparel", optimized: true, tags: ["running", "shoes", "athletic", "gym", "sport"], metaTitle: "Runner Pro 12 – Lightweight Running Shoes", metaDesc: "High performance running shoes for men. Lightweight breathable design for gym and outdoor runs.", seoScore: 88 },
+      { id: 4, name: "SlimFit Backpack", title: "Laptop Backpack 15.6 Inch Waterproof USB Charging School Travel Business", sku: "BP-055", emoji: "🎒", status: "draft", collection: "Apparel", optimized: false, tags: ["backpack", "laptop", "waterproof"], metaTitle: "", metaDesc: "", seoScore: 48 },
+      { id: 5, name: "OptiCam HD", title: "Security Camera 1080P Outdoor Wireless WiFi Night Vision IP Camera", sku: "CM-199", emoji: "📷", status: "active", collection: "Electronics", optimized: false, tags: ["security", "camera", "wifi", "outdoor"], metaTitle: "", metaDesc: "", seoScore: 61 },
+      { id: 6, name: "SteelMug Pro", title: "Insulated Travel Coffee Mug 20oz Stainless Steel Leak Proof Car Cup", sku: "MG-033", emoji: "☕", status: "active", collection: "Home", optimized: true, tags: ["mug", "coffee", "insulated", "travel", "stainless"], metaTitle: "SteelMug Pro – 20oz Insulated Travel Mug", metaDesc: "Keep drinks hot or cold for 12 hours. Leak-proof stainless steel travel mug for commuters.", seoScore: 91 },
+      { id: 7, name: "NanoWatch S7", title: "Smart Watch Men Women Fitness Tracker Heart Rate Blood Pressure Monitor", sku: "WA-771", emoji: "⌚", status: "active", collection: "Electronics", optimized: false, tags: ["smartwatch", "fitness", "tracker", "health"], metaTitle: "", metaDesc: "", seoScore: 57 },
+      { id: 8, name: "FlexiDesk", title: "Standing Desk Converter Adjustable Height Sit Stand Workstation Large", sku: "DS-884", emoji: "🖥️", status: "draft", collection: "Home", optimized: false, tags: ["desk", "standing", "ergonomic"], metaTitle: "", metaDesc: "", seoScore: 44 },
+    ];
 
-<!-- TAG MODAL -->
-<div class="mo" id="tagModal">
-  <div class="modal">
-    <div class="mh"><div class="mht" id="tagMTitle">Tag suggestions</div><button class="mc" onclick="closeMo('tagModal')">×</button></div>
-    <div class="mb" id="tagMBody"></div>
-    <div class="mf">
-      <button class="btn bs" onclick="closeMo('tagModal')">Cancel</button>
-      <button class="btn bm" id="applyTagsBtn" onclick="applyTags()" style="display:none">✓ Apply selected tags</button>
-    </div>
-  </div>
-</div>
+    let sel = new Set(), apiKey = '', genRes = {}, filtered = [...PRODUCTS], stF = '', colF = '', curPg = 1;
+    let curTagProd = null, genTags = [];
 
-<div class="tws" id="tws"></div>
+    function cc(n) { return n <= 60 ? 'cok' : n <= 70 ? 'cwn' : 'cbd' }
 
-<script>
-const PRODUCTS=[
-  {id:1,name:"BT-900X",title:"Wireless Headphones Black 2024 Model Noise Cancelling Over Ear Premium",sku:"HP-001",emoji:"🎧",status:"active",collection:"Electronics",optimized:false,tags:["headphones","wireless","noise cancelling"],metaTitle:"",metaDesc:"",seoScore:62},
-  {id:2,name:"CoolBreeze X3",title:"Portable Air Conditioner Fan Humidifier Evaporative Desktop USB White",sku:"AC-220",emoji:"🌀",status:"active",collection:"Electronics",optimized:false,tags:["fan","air conditioner","desktop"],metaTitle:"",metaDesc:"",seoScore:55},
-  {id:3,name:"Runner Pro 12",title:"Running Shoes Men's Lightweight Breathable Sport Athletic Gym",sku:"SH-412",emoji:"👟",status:"active",collection:"Apparel",optimized:true,tags:["running","shoes","athletic","gym","sport"],metaTitle:"Runner Pro 12 – Lightweight Running Shoes",metaDesc:"High performance running shoes for men. Lightweight breathable design for gym and outdoor runs.",seoScore:88},
-  {id:4,name:"SlimFit Backpack",title:"Laptop Backpack 15.6 Inch Waterproof USB Charging School Travel Business",sku:"BP-055",emoji:"🎒",status:"draft",collection:"Apparel",optimized:false,tags:["backpack","laptop","waterproof"],metaTitle:"",metaDesc:"",seoScore:48},
-  {id:5,name:"OptiCam HD",title:"Security Camera 1080P Outdoor Wireless WiFi Night Vision IP Camera",sku:"CM-199",emoji:"📷",status:"active",collection:"Electronics",optimized:false,tags:["security","camera","wifi","outdoor"],metaTitle:"",metaDesc:"",seoScore:61},
-  {id:6,name:"SteelMug Pro",title:"Insulated Travel Coffee Mug 20oz Stainless Steel Leak Proof Car Cup",sku:"MG-033",emoji:"☕",status:"active",collection:"Home",optimized:true,tags:["mug","coffee","insulated","travel","stainless"],metaTitle:"SteelMug Pro – 20oz Insulated Travel Mug",metaDesc:"Keep drinks hot or cold for 12 hours. Leak-proof stainless steel travel mug for commuters.",seoScore:91},
-  {id:7,name:"NanoWatch S7",title:"Smart Watch Men Women Fitness Tracker Heart Rate Blood Pressure Monitor",sku:"WA-771",emoji:"⌚",status:"active",collection:"Electronics",optimized:false,tags:["smartwatch","fitness","tracker","health"],metaTitle:"",metaDesc:"",seoScore:57},
-  {id:8,name:"FlexiDesk",title:"Standing Desk Converter Adjustable Height Sit Stand Workstation Large",sku:"DS-884",emoji:"🖥️",status:"draft",collection:"Home",optimized:false,tags:["desk","standing","ergonomic"],metaTitle:"",metaDesc:"",seoScore:44},
-];
+    function goto(page) {
+      document.querySelectorAll('.ni').forEach(n => n.classList.remove('active'));
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      const ni = document.querySelector(`.ni[onclick="goto('${page}')"]`);
+      if (ni) ni.classList.add('active');
+      const pg = document.getElementById('page-' + page);
+      if (pg) pg.classList.add('active');
+      if (page === 'meta') renderMeta();
+      if (page === 'tags') renderTags();
+      if (page === 'analytics') renderAnalytics();
+      if (page === 'seo') renderSEO();
+      if (page === 'apikeys') renderAPIKeys();
+    }
 
-let sel=new Set(),apiKey='',genRes={},filtered=[...PRODUCTS],stF='',colF='',curPg=1;
-let curTagProd=null,genTags=[];
+    function updateStats() {
+      const opt = PRODUCTS.filter(p => p.optimized).length;
+      const avg = Math.round(PRODUCTS.reduce((s, p) => s + p.title.length, 0) / PRODUCTS.length);
+      document.getElementById('totalCt').textContent = PRODUCTS.length;
+      document.getElementById('optCt').textContent = opt;
+      document.getElementById('avgLen').textContent = avg;
+      document.getElementById('uct').textContent = opt + ' / 50';
+      document.getElementById('ub').style.width = Math.round((opt / 50) * 100) + '%';
+      document.getElementById('anOpt').textContent = opt;
+      document.getElementById('anCr').innerHTML = opt + '<span style="font-size:14px;color:var(--t2)">/50</span>';
+      document.getElementById('bilOpt').textContent = opt + ' / 50';
+    }
 
-function cc(n){return n<=60?'cok':n<=70?'cwn':'cbd'}
-
-function goto(page){
-  document.querySelectorAll('.ni').forEach(n=>n.classList.remove('active'));
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  const ni=document.querySelector(`.ni[onclick="goto('${page}')"]`);
-  if(ni)ni.classList.add('active');
-  const pg=document.getElementById('page-'+page);
-  if(pg)pg.classList.add('active');
-  if(page==='meta')renderMeta();
-  if(page==='tags')renderTags();
-  if(page==='analytics')renderAnalytics();
-  if(page==='seo')renderSEO();
-  if(page==='apikeys')renderAPIKeys();
-}
-
-function updateStats(){
-  const opt=PRODUCTS.filter(p=>p.optimized).length;
-  const avg=Math.round(PRODUCTS.reduce((s,p)=>s+p.title.length,0)/PRODUCTS.length);
-  document.getElementById('totalCt').textContent=PRODUCTS.length;
-  document.getElementById('optCt').textContent=opt;
-  document.getElementById('avgLen').textContent=avg;
-  document.getElementById('uct').textContent=opt+' / 50';
-  document.getElementById('ub').style.width=Math.round((opt/50)*100)+'%';
-  document.getElementById('anOpt').textContent=opt;
-  document.getElementById('anCr').innerHTML=opt+'<span style="font-size:14px;color:var(--t2)">/50</span>';
-  document.getElementById('bilOpt').textContent=opt+' / 50';
-}
-
-function renderTable(){
-  const tb=document.getElementById('ptable');tb.innerHTML='';
-  const s=(curPg-1)*8,e=s+8,items=filtered.slice(s,e);
-  const maxPg=Math.ceil(filtered.length/8);
-  document.getElementById('pg2').style.display=maxPg>1?'flex':'none';
-  if(!filtered.length){tb.innerHTML=`<tr><td colspan="6"><div class="empty"><div class="ei">🔍</div><div class="et">No products found</div></div></td></tr>`;return}
-  items.forEach(p=>{
-    const n=p.title.length;
-    const badge=p.optimized?`<span class="badge bma">Optimized</span>`:p.status==='active'?`<span class="badge bok">Active</span>`:`<span class="badge bdf">Draft</span>`;
-    const tr=document.createElement('tr');
-    if(sel.has(p.id))tr.classList.add('sel-r');
-    tr.innerHTML=`<td><input type="checkbox" ${sel.has(p.id)?'checked':''} onchange="togSel(${p.id},this.checked)"/></td>
+    function renderTable() {
+      const tb = document.getElementById('ptable'); tb.innerHTML = '';
+      const s = (curPg - 1) * 8, e = s + 8, items = filtered.slice(s, e);
+      const maxPg = Math.ceil(filtered.length / 8);
+      document.getElementById('pg2').style.display = maxPg > 1 ? 'flex' : 'none';
+      if (!filtered.length) { tb.innerHTML = `<tr><td colspan="6"><div class="empty"><div class="ei">🔍</div><div class="et">No products found</div></div></td></tr>`; return }
+      items.forEach(p => {
+        const n = p.title.length;
+        const badge = p.optimized ? `<span class="badge bma">Optimized</span>` : p.status === 'active' ? `<span class="badge bok">Active</span>` : `<span class="badge bdf">Draft</span>`;
+        const tr = document.createElement('tr');
+        if (sel.has(p.id)) tr.classList.add('sel-r');
+        tr.innerHTML = `<td><input type="checkbox" ${sel.has(p.id) ? 'checked' : ''} onchange="togSel(${p.id},this.checked)"/></td>
       <td><div class="pc"><div class="pt2">${p.emoji}</div><div><div class="pn">${p.name}</div><div class="psk">${p.sku}</div></div></div></td>
       <td class="tc">${p.title}</td>
       <td><span class="ct ${cc(n)}">${n}</span></td>
       <td>${badge}</td>
       <td><button class="rb" onclick="openSingle(${p.id})">Optimize</button></td>`;
-    tb.appendChild(tr);
-  });
-  document.getElementById('pgInfo').textContent=`Showing ${s+1}–${Math.min(e,filtered.length)} of ${filtered.length}`;
-  document.getElementById('chkAll').checked=items.length>0&&items.every(p=>sel.has(p.id));
-  document.getElementById('pg1').classList.toggle('act',curPg===1);
-  document.getElementById('pg2').classList.toggle('act',curPg===2);
-}
+        tb.appendChild(tr);
+      });
+      document.getElementById('pgInfo').textContent = `Showing ${s + 1}–${Math.min(e, filtered.length)} of ${filtered.length}`;
+      document.getElementById('chkAll').checked = items.length > 0 && items.every(p => sel.has(p.id));
+      document.getElementById('pg1').classList.toggle('act', curPg === 1);
+      document.getElementById('pg2').classList.toggle('act', curPg === 2);
+    }
 
-function togSel(id,v){v?sel.add(id):sel.delete(id);updateUI();renderTable()}
-function togAll(v){const s=(curPg-1)*8;filtered.slice(s,s+8).forEach(p=>v?sel.add(p.id):sel.delete(p.id));updateUI();renderTable()}
-function updateUI(){
-  const n=sel.size,btn=document.getElementById('optBtn'),pill=document.getElementById('spill');
-  btn.disabled=n===0;
-  if(n>0){pill.style.display='inline-flex';pill.textContent=n+' selected';btn.textContent='✦ Optimize '+n+' selected'}
-  else{pill.style.display='none';btn.textContent='✦ Optimize selected'}
-}
-function filterP(q){
-  const s=q.toLowerCase();
-  filtered=PRODUCTS.filter(p=>(!stF||(stF==='optimized'?p.optimized:p.status===stF))&&(!colF||p.collection===colF)&&(p.name.toLowerCase().includes(s)||p.title.toLowerCase().includes(s)||p.sku.toLowerCase().includes(s)));
-  curPg=1;renderTable();
-}
-function filterSt(v){stF=v;filterP(document.getElementById('titleSearch').value)}
-function filterCol(v){colF=v;filterP(document.getElementById('titleSearch').value)}
-function chPg(d){const max=Math.ceil(filtered.length/8);curPg=Math.max(1,Math.min(max,curPg+d));renderTable()}
-function goP(n){curPg=n;renderTable()}
+    function togSel(id, v) { v ? sel.add(id) : sel.delete(id); updateUI(); renderTable() }
+    function togAll(v) { const s = (curPg - 1) * 8; filtered.slice(s, s + 8).forEach(p => v ? sel.add(p.id) : sel.delete(p.id)); updateUI(); renderTable() }
+    function updateUI() {
+      const n = sel.size, btn = document.getElementById('optBtn'), pill = document.getElementById('spill');
+      btn.disabled = n === 0;
+      if (n > 0) { pill.style.display = 'inline-flex'; pill.textContent = n + ' selected'; btn.textContent = '✦ Optimize ' + n + ' selected' }
+      else { pill.style.display = 'none'; btn.textContent = '✦ Optimize selected' }
+    }
+    function filterP(q) {
+      const s = q.toLowerCase();
+      filtered = PRODUCTS.filter(p => (!stF || (stF === 'optimized' ? p.optimized : p.status === stF)) && (!colF || p.collection === colF) && (p.name.toLowerCase().includes(s) || p.title.toLowerCase().includes(s) || p.sku.toLowerCase().includes(s)));
+      curPg = 1; renderTable();
+    }
+    function filterSt(v) { stF = v; filterP(document.getElementById('titleSearch').value) }
+    function filterCol(v) { colF = v; filterP(document.getElementById('titleSearch').value) }
+    function chPg(d) { const max = Math.ceil(filtered.length / 8); curPg = Math.max(1, Math.min(max, curPg + d)); renderTable() }
+    function goP(n) { curPg = n; renderTable() }
 
-function saveApiKey(){
-  apiKey=document.getElementById('apiKeyInput').value.trim();
-  if(apiKey){document.getElementById('apiBanner').style.display='none';showToast('API key saved — ready to optimize!','ok');renderAPIKeys()}
-  else showToast('Please enter a valid key','err');
-}
+    function saveApiKey() {
+      apiKey = document.getElementById('apiKeyInput').value.trim();
+      if (apiKey) { document.getElementById('apiBanner').style.display = 'none'; showToast('API key saved — ready to optimize!', 'ok'); renderAPIKeys() }
+      else showToast('Please enter a valid key', 'err');
+    }
 
-function openOptModal(){if(!sel.size)return;showOptModal(PRODUCTS.filter(p=>sel.has(p.id)))}
-function openSingle(id){showOptModal([PRODUCTS.find(x=>x.id===id)])}
+    function openOptModal() { if (!sel.size) return; showOptModal(PRODUCTS.filter(p => sel.has(p.id))) }
+    function openSingle(id) { showOptModal([PRODUCTS.find(x => x.id === id)]) }
 
-function showOptModal(products){
-  genRes={};
-  document.getElementById('mTitle').textContent='AI title optimization — '+products.length+' product'+(products.length>1?'s':'');
-  const body=document.getElementById('mBody');body.innerHTML='';
-  document.getElementById('applyAllBtn').style.display='none';
-  document.getElementById('regenBtn').style.display='none';
-  document.getElementById('optModal').classList.add('open');
-  if(!apiKey){
-    body.innerHTML=`<div style="text-align:center;padding:40px 16px">
+    function showOptModal(products) {
+      genRes = {};
+      document.getElementById('mTitle').textContent = 'AI title optimization — ' + products.length + ' product' + (products.length > 1 ? 's' : '');
+      const body = document.getElementById('mBody'); body.innerHTML = '';
+      document.getElementById('applyAllBtn').style.display = 'none';
+      document.getElementById('regenBtn').style.display = 'none';
+      document.getElementById('optModal').classList.add('open');
+      if (!apiKey) {
+        body.innerHTML = `<div style="text-align:center;padding:40px 16px">
       <div style="font-size:40px;margin-bottom:16px">🔑</div>
       <div style="font-size:16px;font-weight:600;margin-bottom:8px">OpenAI API key required</div>
       <div style="font-size:14px;color:var(--t2);margin-bottom:20px">Enter your key to enable GPT-4o optimization.</div>
@@ -590,227 +1945,304 @@ function showOptModal(products){
         <input class="ti" type="password" id="mKey" placeholder="sk-proj-…" style="font-family:monospace;font-size:13px"/>
         <button class="btn bm" onclick="saveKeyModal()">Save &amp; optimize</button>
       </div></div>`;
-    return;
-  }
-  products.forEach(p=>{const c=document.createElement('div');c.className='lc';c.id='card-'+p.id;c.innerHTML='<div class="spin"></div><div class="lt">Optimizing <strong>'+p.name+'</strong>…</div>';body.appendChild(c)});
-  let done=0;
-  products.forEach(p=>genTitle(p).then(r=>{genRes[p.id]=r;renderRC(p,r);done++;if(done===products.length){document.getElementById('applyAllBtn').style.display='inline-flex';document.getElementById('regenBtn').style.display='inline-flex'}}));
-}
+        return;
+      }
+      products.forEach(p => { const c = document.createElement('div'); c.className = 'lc'; c.id = 'card-' + p.id; c.innerHTML = '<div class="spin"></div><div class="lt">Optimizing <strong>' + p.name + '</strong>…</div>'; body.appendChild(c) });
+      let done = 0;
+      products.forEach(p => genTitle(p).then(r => { genRes[p.id] = r; renderRC(p, r); done++; if (done === products.length) { document.getElementById('applyAllBtn').style.display = 'inline-flex'; document.getElementById('regenBtn').style.display = 'inline-flex' } }));
+    }
 
-function saveKeyModal(){apiKey=(document.getElementById('mKey')||{}).value?.trim()||'';if(!apiKey)return;document.getElementById('apiBanner').style.display='none';closeMo('optModal');setTimeout(openOptModal,80)}
+    function saveKeyModal() { apiKey = (document.getElementById('mKey') || {}).value?.trim() || ''; if (!apiKey) return; document.getElementById('apiBanner').style.display = 'none'; closeMo('optModal'); setTimeout(openOptModal, 80) }
 
-async function genTitle(p){
-  const prompt='You are a Shopify SEO expert. Rewrite this product title: compelling, SEO-optimized, under 70 chars. Also suggest meta title (under 60 chars) and meta description (under 160 chars).\nOriginal: "'+p.title+'" SKU: '+p.sku+'\nRespond ONLY in JSON: {"optimized_title":"...","meta_title":"...","meta_description":"...","keywords":["k1","k2","k3"]}';
-  try{
-    const r=await fetch('https://api.openai.com/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+apiKey},body:JSON.stringify({model:(document.getElementById('modelSel')||{value:'gpt-4o'}).value,max_tokens:512,messages:[{role:'user',content:prompt}],response_format:{type:'json_object'}})});
-    const d=await r.json();if(d.error)throw new Error(d.error.message);
-    return JSON.parse(d.choices[0].message.content);
-  }catch(e){showToast('API error: '+e.message,'err');return{optimized_title:'Error — check API key',meta_title:'',meta_description:'',keywords:[],error:true}}
-}
+    async function genTitle(p) {
+      const prompt = 'You are a Shopify SEO expert. Rewrite this product title: compelling, SEO-optimized, under 70 chars. Also suggest meta title (under 60 chars) and meta description (under 160 chars).\nOriginal: "' + p.title + '" SKU: ' + p.sku + '\nRespond ONLY in JSON: {"optimized_title":"...","meta_title":"...","meta_description":"...","keywords":["k1","k2","k3"]}';
+      try {
+        const r = await fetch('https://api.openai.com/v1/chat/completions', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + apiKey }, body: JSON.stringify({ model: (document.getElementById('modelSel') || { value: 'gpt-4o' }).value, max_tokens: 512, messages: [{ role: 'user', content: prompt }], response_format: { type: 'json_object' } }) });
+        const d = await r.json(); if (d.error) throw new Error(d.error.message);
+        return JSON.parse(d.choices[0].message.content);
+      } catch (e) { showToast('API error: ' + e.message, 'err'); return { optimized_title: 'Error — check API key', meta_title: '', meta_description: '', keywords: [], error: true } }
+    }
 
-function renderRC(p,r){
-  const card=document.getElementById('card-'+p.id);
-  const oc=p.title.length,nc=(r.optimized_title||'').length;
-  card.className='rc';
-  card.innerHTML='<div class="rh"><div class="rp"><span>'+p.emoji+'</span><span>'+p.name+'</span><span class="rsk">'+p.sku+'</span></div><span class="ct '+cc(nc)+'">'+nc+' chars</span></div>'+
-    '<div class="rbody"><div class="cg"><div class="cb co"><div class="clb">Original</div><div class="ctx">'+p.title+'</div><div class="cch">'+oc+' chars</div></div>'+
-    '<div class="cb ca"><div class="clb">GPT-4o suggestion</div><div class="ctx">'+(r.optimized_title||'—')+'</div><div class="cch">'+nc+' chars</div></div></div>'+
-    '<div class="fg"><div class="fl">Edit before applying</div><input class="ti" type="text" id="edit-'+p.id+'" value="'+(r.optimized_title||'').replace(/"/g,'&quot;')+'" maxlength="70"/><div class="fh" id="cnt-'+p.id+'">'+nc+'/70 characters</div></div>'+
-    (r.meta_title?'<div class="fg"><div class="fl">Meta title</div><div class="sv2">'+r.meta_title+'</div></div><div class="fg"><div class="fl">Meta description</div><div class="sv2">'+r.meta_description+'</div></div>':'')+
-    (r.keywords&&r.keywords.length?'<div class="fg"><div class="fl">Keywords</div><div>'+r.keywords.map(k=>'<span class="kt">'+k+'</span>').join('')+'</div></div>':'')+
-    '<div class="ar"><div class="ah">Updates product title via Shopify Admin API</div><button class="btn bp" id="apply-'+p.id+'" onclick="applySingle('+p.id+')">✓ Apply to Shopify</button></div></div>';
-  const inp=document.getElementById('edit-'+p.id),cnt=document.getElementById('cnt-'+p.id);
-  inp.addEventListener('input',()=>{const n=inp.value.length;cnt.textContent=n+'/70 characters';cnt.style.color=n>70?'var(--bad)':n>60?'var(--wt)':'var(--t2)';genRes[p.id]._edited=inp.value});
-}
+    function renderRC(p, r) {
+      const card = document.getElementById('card-' + p.id);
+      const oc = p.title.length, nc = (r.optimized_title || '').length;
+      card.className = 'rc';
+      card.innerHTML = '<div class="rh"><div class="rp"><span>' + p.emoji + '</span><span>' + p.name + '</span><span class="rsk">' + p.sku + '</span></div><span class="ct ' + cc(nc) + '">' + nc + ' chars</span></div>' +
+        '<div class="rbody"><div class="cg"><div class="cb co"><div class="clb">Original</div><div class="ctx">' + p.title + '</div><div class="cch">' + oc + ' chars</div></div>' +
+        '<div class="cb ca"><div class="clb">GPT-4o suggestion</div><div class="ctx">' + (r.optimized_title || '—') + '</div><div class="cch">' + nc + ' chars</div></div></div>' +
+        '<div class="fg"><div class="fl">Edit before applying</div><input class="ti" type="text" id="edit-' + p.id + '" value="' + (r.optimized_title || '').replace(/"/g, '&quot;') + '" maxlength="70"/><div class="fh" id="cnt-' + p.id + '">' + nc + '/70 characters</div></div>' +
+        (r.meta_title ? '<div class="fg"><div class="fl">Meta title</div><div class="sv2">' + r.meta_title + '</div></div><div class="fg"><div class="fl">Meta description</div><div class="sv2">' + r.meta_description + '</div></div>' : '') +
+        (r.keywords && r.keywords.length ? '<div class="fg"><div class="fl">Keywords</div><div>' + r.keywords.map(k => '<span class="kt">' + k + '</span>').join('') + '</div></div>' : '') +
+        '<div class="ar"><div class="ah">Updates product title via Shopify Admin API</div><button class="btn bp" id="apply-' + p.id + '" onclick="applySingle(' + p.id + ')">✓ Apply to Shopify</button></div></div>';
+      const inp = document.getElementById('edit-' + p.id), cnt = document.getElementById('cnt-' + p.id);
+      inp.addEventListener('input', () => { const n = inp.value.length; cnt.textContent = n + '/70 characters'; cnt.style.color = n > 70 ? 'var(--bad)' : n > 60 ? 'var(--wt)' : 'var(--t2)'; genRes[p.id]._edited = inp.value });
+    }
 
-function applySingle(id){
-  const btn=document.getElementById('apply-'+id),inp=document.getElementById('edit-'+id);
-  const title=inp?inp.value:(genRes[id]?.optimized_title||'');
-  btn.disabled=true;btn.textContent='Applying…';
-  setTimeout(()=>{
-    const p=PRODUCTS.find(x=>x.id===id);if(p){p.title=title;p.optimized=true;p.seoScore=Math.min(95,p.seoScore+22)}
-    btn.textContent='✓ Applied!';showToast('"'+title+'" applied!','ok');updateStats();renderTable();
-  },1100);
-}
-function applyAll(){const btn=document.getElementById('applyAllBtn');btn.disabled=true;btn.textContent='Applying all…';document.querySelectorAll('[id^="apply-"]').forEach(b=>{if(!b.disabled)b.click()});setTimeout(()=>{closeMo('optModal');showToast('All titles applied!','ok')},1800)}
-function regenAll(){
-  const products=PRODUCTS.filter(p=>genRes[p.id]!==undefined);genRes={};
-  document.getElementById('applyAllBtn').style.display='none';document.getElementById('regenBtn').style.display='none';
-  const body=document.getElementById('mBody');body.innerHTML='';
-  products.forEach(p=>{const c=document.createElement('div');c.className='lc';c.id='card-'+p.id;c.innerHTML='<div class="spin"></div><div class="lt">Regenerating for <strong>'+p.name+'</strong>…</div>';body.appendChild(c)});
-  let done=0;products.forEach(p=>genTitle(p).then(r=>{genRes[p.id]=r;renderRC(p,r);done++;if(done===products.length){document.getElementById('applyAllBtn').style.display='inline-flex';document.getElementById('regenBtn').style.display='inline-flex'}}));
-}
+    function applySingle(id) {
+  const btn = document.getElementById('apply-' + id);
+  const inp = document.getElementById('edit-' + id);
+  const title = inp ? inp.value : (genRes[id]?.optimized_title || '');
+  btn.disabled = true; btn.textContent = 'Applying…';
 
-// META PAGE
-let metaStF='';
-function renderMeta(q=''){
-  const s=(q||'').toLowerCase();
-  const filtered2=PRODUCTS.filter(p=>(!metaStF||p.status===metaStF)&&(p.name.toLowerCase().includes(s)||p.title.toLowerCase().includes(s)));
-  const list=document.getElementById('metaList');list.innerHTML='';
-  filtered2.forEach(p=>{
-    const d=document.createElement('div');
-    d.style.cssText='background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);margin-bottom:12px;overflow:hidden';
-    d.innerHTML='<div style="background:var(--s2);padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">'+
-      '<div class="rp"><span>'+p.emoji+'</span><span>'+p.name+'</span><span class="rsk">'+p.sku+'</span></div>'+
-      '<button class="btn bm" style="font-size:12px;padding:5px 10px" onclick="aiMeta('+p.id+')">✦ AI Generate</button></div>'+
-      '<div style="padding:16px;display:grid;grid-template-columns:1fr 1fr;gap:12px">'+
-      '<div class="fg"><div class="fl">Meta title <span style="font-weight:400;color:var(--t3)" id="mtc-'+p.id+'">'+(p.metaTitle||'').length+'/60</span></div>'+
-      '<input class="ti" id="mt-'+p.id+'" value="'+(p.metaTitle||'')+'" placeholder="SEO title (under 60 chars)" maxlength="60" oninput="document.getElementById(\'mtc-'+p.id+'\').textContent=this.value.length+\'/60\';PRODUCTS.find(x=>x.id==='+p.id+').metaTitle=this.value"/></div>'+
-      '<div class="fg"><div class="fl">Meta description <span style="font-weight:400;color:var(--t3)" id="mdc-'+p.id+'">'+(p.metaDesc||'').length+'/160</span></div>'+
-      '<input class="ti" id="md-'+p.id+'" value="'+(p.metaDesc||'')+'" placeholder="Meta description (under 160 chars)" maxlength="160" oninput="document.getElementById(\'mdc-'+p.id+'\').textContent=this.value.length+\'/160\';PRODUCTS.find(x=>x.id==='+p.id+').metaDesc=this.value"/></div></div>'+
-      '<div style="padding:0 16px 12px;font-size:12px;color:var(--t2)">Current title: '+p.title+'</div>';
-    list.appendChild(d);
-  });
-}
-function filterMeta(q){renderMeta(q)}
-function filterMetaSt(v){metaStF=v;renderMeta()}
-async function aiMeta(id){
-  if(!apiKey){showToast('Enter your OpenAI API key first','err');goto('apikeys');return}
-  const p=PRODUCTS.find(x=>x.id===id);showToast('Generating meta for '+p.name+'…','def');
-  const r=await genTitle(p);
-  if(!r.error){
-    p.metaTitle=r.meta_title||'';p.metaDesc=r.meta_description||'';
-    const mt=document.getElementById('mt-'+id),md=document.getElementById('md-'+id);
-    if(mt){mt.value=p.metaTitle;document.getElementById('mtc-'+id).textContent=p.metaTitle.length+'/60'}
-    if(md){md.value=p.metaDesc;document.getElementById('mdc-'+id).textContent=p.metaDesc.length+'/160'}
-    showToast('Meta generated for '+p.name+'!','ok');
+  const urlParams = new URLSearchParams(window.location.search);
+  const shop = urlParams.get('shop');
+
+  if (shop) {
+    // Save to real Shopify store
+    fetch('/api/products/' + id, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title })
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (data.success) {
+        const p = PRODUCTS.find(x => x.id == id);
+        if (p) { p.title = title; p.optimized = true; p.seoScore = Math.min(95, p.seoScore + 20); }
+        btn.textContent = '✓ Applied!';
+        showToast('"' + title + '" saved to Shopify!', 'ok');
+        updateStats(); renderTable();
+      } else {
+        btn.disabled = false; btn.textContent = '✓ Apply to Shopify';
+        showToast('Error: ' + data.error, 'err');
+      }
+    })
+    .catch(e => { btn.disabled = false; btn.textContent = '✓ Apply to Shopify'; showToast('Error: ' + e.message, 'err'); });
+  } else {
+    // Demo mode
+    setTimeout(() => {
+      const p = PRODUCTS.find(x => x.id == id);
+      if (p) { p.title = title; p.optimized = true; }
+      btn.textContent = '✓ Applied!';
+      showToast('"' + title + '" applied!', 'ok');
+      updateStats(); renderTable();
+    }, 1100);
   }
 }
+    function applyAll() { const btn = document.getElementById('applyAllBtn'); btn.disabled = true; btn.textContent = 'Applying all…'; document.querySelectorAll('[id^="apply-"]').forEach(b => { if (!b.disabled) b.click() }); setTimeout(() => { closeMo('optModal'); showToast('All titles applied!', 'ok') }, 1800) }
+    function regenAll() {
+      const products = PRODUCTS.filter(p => genRes[p.id] !== undefined); genRes = {};
+      document.getElementById('applyAllBtn').style.display = 'none'; document.getElementById('regenBtn').style.display = 'none';
+      const body = document.getElementById('mBody'); body.innerHTML = '';
+      products.forEach(p => { const c = document.createElement('div'); c.className = 'lc'; c.id = 'card-' + p.id; c.innerHTML = '<div class="spin"></div><div class="lt">Regenerating for <strong>' + p.name + '</strong>…</div>'; body.appendChild(c) });
+      let done = 0; products.forEach(p => genTitle(p).then(r => { genRes[p.id] = r; renderRC(p, r); done++; if (done === products.length) { document.getElementById('applyAllBtn').style.display = 'inline-flex'; document.getElementById('regenBtn').style.display = 'inline-flex' } }));
+    }
 
-// TAG PAGE
-function renderTags(){
-  const list=document.getElementById('tagList');list.innerHTML='';
-  PRODUCTS.forEach(p=>{
-    const d=document.createElement('div');
-    d.style.cssText='background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);margin-bottom:12px;overflow:hidden';
-    d.innerHTML='<div style="background:var(--s2);padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">'+
-      '<div class="rp"><span>'+p.emoji+'</span><span>'+p.name+'</span><span class="rsk">'+p.sku+'</span><span style="font-size:11px;color:var(--t2)">'+p.tags.length+' tags</span></div>'+
-      '<button class="btn bm" style="font-size:12px;padding:5px 10px" onclick="suggestTags('+p.id+')">✦ Suggest tags</button></div>'+
-      '<div style="padding:14px 16px;display:flex;align-items:center;gap:6px;flex-wrap:wrap" id="tags-'+p.id+'"></div>';
-    list.appendChild(d);
-    renderTagsFor(p.id);
-  });
-}
-function renderTagsFor(id){
-  const p=PRODUCTS.find(x=>x.id===id);
-  const el=document.getElementById('tags-'+id);if(!el)return;
-  el.innerHTML=p.tags.map(t=>'<span class="kt" style="cursor:pointer" onclick="removeTag('+id+',\''+t+'\')">'+t+' ×</span>').join('')+
-    '<input style="border:1px dashed var(--border2);border-radius:var(--rf);padding:2px 10px;font-size:12px;font-family:inherit;outline:none;background:transparent;color:var(--text);min-width:80px" placeholder="+ Add tag" onkeydown="if(event.key===\'Enter\'&&this.value.trim()){addTag('+id+',this.value.trim());this.value=\'\'}"/>';
-}
-function removeTag(id,tag){const p=PRODUCTS.find(x=>x.id===id);p.tags=p.tags.filter(t=>t!==tag);renderTagsFor(id)}
-function addTag(id,tag){const p=PRODUCTS.find(x=>x.id===id);if(tag&&!p.tags.includes(tag))p.tags.push(tag);renderTagsFor(id)}
+    // META PAGE
+    let metaStF = '';
+    function renderMeta(q = '') {
+      const s = (q || '').toLowerCase();
+      const filtered2 = PRODUCTS.filter(p => (!metaStF || p.status === metaStF) && (p.name.toLowerCase().includes(s) || p.title.toLowerCase().includes(s)));
+      const list = document.getElementById('metaList'); list.innerHTML = '';
+      filtered2.forEach(p => {
+        const d = document.createElement('div');
+        d.style.cssText = 'background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);margin-bottom:12px;overflow:hidden';
+        d.innerHTML = '<div style="background:var(--s2);padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">' +
+          '<div class="rp"><span>' + p.emoji + '</span><span>' + p.name + '</span><span class="rsk">' + p.sku + '</span></div>' +
+          '<button class="btn bm" style="font-size:12px;padding:5px 10px" onclick="aiMeta(' + p.id + ')">✦ AI Generate</button></div>' +
+          '<div style="padding:16px;display:grid;grid-template-columns:1fr 1fr;gap:12px">' +
+          '<div class="fg"><div class="fl">Meta title <span style="font-weight:400;color:var(--t3)" id="mtc-' + p.id + '">' + (p.metaTitle || '').length + '/60</span></div>' +
+          '<input class="ti" id="mt-' + p.id + '" value="' + (p.metaTitle || '') + '" placeholder="SEO title (under 60 chars)" maxlength="60" oninput="document.getElementById(\'mtc-' + p.id + '\').textContent=this.value.length+\'/60\';PRODUCTS.find(x=>x.id===' + p.id + ').metaTitle=this.value"/></div>' +
+          '<div class="fg"><div class="fl">Meta description <span style="font-weight:400;color:var(--t3)" id="mdc-' + p.id + '">' + (p.metaDesc || '').length + '/160</span></div>' +
+          '<input class="ti" id="md-' + p.id + '" value="' + (p.metaDesc || '') + '" placeholder="Meta description (under 160 chars)" maxlength="160" oninput="document.getElementById(\'mdc-' + p.id + '\').textContent=this.value.length+\'/160\';PRODUCTS.find(x=>x.id===' + p.id + ').metaDesc=this.value"/></div></div>' +
+          '<div style="padding:0 16px 12px;font-size:12px;color:var(--t2)">Current title: ' + p.title + '</div>';
+        list.appendChild(d);
+      });
+    }
+    function filterMeta(q) { renderMeta(q) }
+    function filterMetaSt(v) { metaStF = v; renderMeta() }
+    async function aiMeta(id) {
+      if (!apiKey) { showToast('Enter your OpenAI API key first', 'err'); goto('apikeys'); return }
+      const p = PRODUCTS.find(x => x.id === id); showToast('Generating meta for ' + p.name + '…', 'def');
+      const r = await genTitle(p);
+      if (!r.error) {
+        p.metaTitle = r.meta_title || ''; p.metaDesc = r.meta_description || '';
+        const mt = document.getElementById('mt-' + id), md = document.getElementById('md-' + id);
+        if (mt) { mt.value = p.metaTitle; document.getElementById('mtc-' + id).textContent = p.metaTitle.length + '/60' }
+        if (md) { md.value = p.metaDesc; document.getElementById('mdc-' + id).textContent = p.metaDesc.length + '/160' }
+        showToast('Meta generated for ' + p.name + '!', 'ok');
+      }
+    }
 
-async function suggestTags(id){
-  if(!apiKey){showToast('Enter your OpenAI API key first','err');goto('apikeys');return}
-  const p=PRODUCTS.find(x=>x.id===id);curTagProd=p;
-  showToast('Generating tags for '+p.name+'…','def');
-  const prompt='Generate 10 highly relevant Shopify product tags for: "'+p.title+'". Tags should be specific searchable keywords.\nRespond ONLY in JSON: {"tags":["tag1","tag2",...]}';
-  try{
-    const r=await fetch('https://api.openai.com/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+apiKey},body:JSON.stringify({model:'gpt-4o',max_tokens:256,messages:[{role:'user',content:prompt}],response_format:{type:'json_object'}})});
-    const d=await r.json();if(d.error)throw new Error(d.error.message);
-    const res=JSON.parse(d.choices[0].message.content);genTags=res.tags||[];
-    document.getElementById('tagMTitle').textContent='Tag suggestions for '+p.name;
-    const body=document.getElementById('tagMBody');
-    body.innerHTML='<div style="margin-bottom:12px;font-size:13px;color:var(--t2)">Click tags to deselect. All highlighted tags will be added.</div>'+
-      '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px" id="genTagsWrap">'+
-      genTags.map((t,i)=>'<span class="kt" style="cursor:pointer;border:2px solid var(--magic);background:var(--mbg);color:var(--mt)" id="gtag-'+i+'" onclick="toggleGTag('+i+')">'+t+'</span>').join('')+'</div>'+
-      '<div style="font-size:13px;color:var(--t2);margin-bottom:8px">Current tags:</div>'+
-      '<div>'+p.tags.map(t=>'<span class="kt">'+t+'</span>').join('')+'</div>';
-    document.getElementById('applyTagsBtn').style.display='inline-flex';
-    document.getElementById('tagModal').classList.add('open');
-  }catch(e){showToast('API error: '+e.message,'err')}
-}
+    // TAG PAGE
+    function renderTags() {
+      const list = document.getElementById('tagList'); list.innerHTML = '';
+      PRODUCTS.forEach(p => {
+        const d = document.createElement('div');
+        d.style.cssText = 'background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);margin-bottom:12px;overflow:hidden';
+        d.innerHTML = '<div style="background:var(--s2);padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">' +
+          '<div class="rp"><span>' + p.emoji + '</span><span>' + p.name + '</span><span class="rsk">' + p.sku + '</span><span style="font-size:11px;color:var(--t2)">' + p.tags.length + ' tags</span></div>' +
+          '<button class="btn bm" style="font-size:12px;padding:5px 10px" onclick="suggestTags(' + p.id + ')">✦ Suggest tags</button></div>' +
+          '<div style="padding:14px 16px;display:flex;align-items:center;gap:6px;flex-wrap:wrap" id="tags-' + p.id + '"></div>';
+        list.appendChild(d);
+        renderTagsFor(p.id);
+      });
+    }
+    function renderTagsFor(id) {
+      const p = PRODUCTS.find(x => x.id === id);
+      const el = document.getElementById('tags-' + id); if (!el) return;
+      el.innerHTML = p.tags.map(t => '<span class="kt" style="cursor:pointer" onclick="removeTag(' + id + ',\'' + t + '\')">' + t + ' ×</span>').join('') +
+        '<input style="border:1px dashed var(--border2);border-radius:var(--rf);padding:2px 10px;font-size:12px;font-family:inherit;outline:none;background:transparent;color:var(--text);min-width:80px" placeholder="+ Add tag" onkeydown="if(event.key===\'Enter\'&&this.value.trim()){addTag(' + id + ',this.value.trim());this.value=\'\'}"/>';
+    }
+    function removeTag(id, tag) { const p = PRODUCTS.find(x => x.id === id); p.tags = p.tags.filter(t => t !== tag); renderTagsFor(id) }
+    function addTag(id, tag) { const p = PRODUCTS.find(x => x.id === id); if (tag && !p.tags.includes(tag)) p.tags.push(tag); renderTagsFor(id) }
 
-let deselectedTags=new Set();
-function toggleGTag(i){
-  const el=document.getElementById('gtag-'+i);
-  if(deselectedTags.has(i)){deselectedTags.delete(i);el.style.opacity='1';el.style.background='var(--mbg)'}
-  else{deselectedTags.add(i);el.style.opacity='.35';el.style.background='var(--s2)'}
-}
-function applyTags(){
-  if(!curTagProd)return;
-  genTags.forEach((t,i)=>{if(!deselectedTags.has(i)&&!curTagProd.tags.includes(t))curTagProd.tags.push(t)});
-  deselectedTags=new Set();renderTagsFor(curTagProd.id);
-  closeMo('tagModal');showToast('Tags applied to '+curTagProd.name+'!','ok');
-}
-async function suggestAllTags(){
-  if(!apiKey){showToast('Enter your OpenAI API key first','err');goto('apikeys');return}
-  showToast('Generating tags for all products…','def');
-  for(const p of PRODUCTS){
-    const prompt='Generate 6 Shopify product tags for: "'+p.title+'". Respond ONLY in JSON: {"tags":["tag1","tag2",...]}';
-    try{const r=await fetch('https://api.openai.com/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+apiKey},body:JSON.stringify({model:'gpt-4o',max_tokens:128,messages:[{role:'user',content:prompt}],response_format:{type:'json_object'}})});const d=await r.json();if(!d.error){const res=JSON.parse(d.choices[0].message.content);(res.tags||[]).forEach(t=>{if(!p.tags.includes(t))p.tags.push(t)})}}catch(e){}
-  }
-  renderTags();showToast('Tags updated for all products!','ok');
-}
+    async function suggestTags(id) {
+      if (!apiKey) { showToast('Enter your OpenAI API key first', 'err'); goto('apikeys'); return }
+      const p = PRODUCTS.find(x => x.id === id); curTagProd = p;
+      showToast('Generating tags for ' + p.name + '…', 'def');
+      const prompt = 'Generate 10 highly relevant Shopify product tags for: "' + p.title + '". Tags should be specific searchable keywords.\nRespond ONLY in JSON: {"tags":["tag1","tag2",...]}';
+      try {
+        const r = await fetch('https://api.openai.com/v1/chat/completions', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + apiKey }, body: JSON.stringify({ model: 'gpt-4o', max_tokens: 256, messages: [{ role: 'user', content: prompt }], response_format: { type: 'json_object' } }) });
+        const d = await r.json(); if (d.error) throw new Error(d.error.message);
+        const res = JSON.parse(d.choices[0].message.content); genTags = res.tags || [];
+        document.getElementById('tagMTitle').textContent = 'Tag suggestions for ' + p.name;
+        const body = document.getElementById('tagMBody');
+        body.innerHTML = '<div style="margin-bottom:12px;font-size:13px;color:var(--t2)">Click tags to deselect. All highlighted tags will be added.</div>' +
+          '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px" id="genTagsWrap">' +
+          genTags.map((t, i) => '<span class="kt" style="cursor:pointer;border:2px solid var(--magic);background:var(--mbg);color:var(--mt)" id="gtag-' + i + '" onclick="toggleGTag(' + i + ')">' + t + '</span>').join('') + '</div>' +
+          '<div style="font-size:13px;color:var(--t2);margin-bottom:8px">Current tags:</div>' +
+          '<div>' + p.tags.map(t => '<span class="kt">' + t + '</span>').join('') + '</div>';
+        document.getElementById('applyTagsBtn').style.display = 'inline-flex';
+        document.getElementById('tagModal').classList.add('open');
+      } catch (e) { showToast('API error: ' + e.message, 'err') }
+    }
 
-// ANALYTICS
-function renderAnalytics(){
-  const data=[{l:'Electronics',v:5,c:'#7c3aed'},{l:'Apparel',v:8,c:'#1a9e6a'},{l:'Home & Living',v:4,c:'#e07d00'},{l:'Other',v:1,c:'#616161'}];
-  document.getElementById('analyticsChart').innerHTML=data.map(d=>'<div class="chart-row"><div class="chart-label">'+d.l+'</div><div class="chart-track"><div class="chart-fill" style="width:'+((d.v/10)*100)+'%;background:'+d.c+'">'+d.v+' products</div></div><div class="chart-val">'+d.v+'</div></div>').join('');
-  const acts=[
-    {p:'SteelMug Pro',a:'Title optimized',b:'Insulated Travel Coffee Mug…',af:'20oz Leak-Proof Travel Mug',dt:'Today'},
-    {p:'Runner Pro 12',a:'Tags updated',b:'3 tags',af:'8 tags',dt:'Yesterday'},
-    {p:'BT-900X',a:'Meta generated',b:'No meta',af:'Meta title + desc',dt:'Apr 1'},
-    {p:'OptiCam HD',a:'Title optimized',b:'Security Camera 1080P…',af:'1080P WiFi Security Camera',dt:'Mar 31'},
-  ];
-  document.getElementById('actLog').innerHTML=acts.map(a=>'<tr><td><strong>'+a.p+'</strong></td><td><span class="badge bma">'+a.a+'</span></td><td class="tc">'+a.b+'</td><td class="tc">'+a.af+'</td><td style="color:var(--t2);font-size:12px">'+a.dt+'</td></tr>').join('');
-}
+    let deselectedTags = new Set();
+    function toggleGTag(i) {
+      const el = document.getElementById('gtag-' + i);
+      if (deselectedTags.has(i)) { deselectedTags.delete(i); el.style.opacity = '1'; el.style.background = 'var(--mbg)' }
+      else { deselectedTags.add(i); el.style.opacity = '.35'; el.style.background = 'var(--s2)' }
+    }
+    function applyTags() {
+      if (!curTagProd) return;
+      genTags.forEach((t, i) => { if (!deselectedTags.has(i) && !curTagProd.tags.includes(t)) curTagProd.tags.push(t) });
+      deselectedTags = new Set(); renderTagsFor(curTagProd.id);
+      closeMo('tagModal'); showToast('Tags applied to ' + curTagProd.name + '!', 'ok');
+    }
+    async function suggestAllTags() {
+      if (!apiKey) { showToast('Enter your OpenAI API key first', 'err'); goto('apikeys'); return }
+      showToast('Generating tags for all products…', 'def');
+      for (const p of PRODUCTS) {
+        const prompt = 'Generate 6 Shopify product tags for: "' + p.title + '". Respond ONLY in JSON: {"tags":["tag1","tag2",...]}';
+        try { const r = await fetch('https://api.openai.com/v1/chat/completions', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + apiKey }, body: JSON.stringify({ model: 'gpt-4o', max_tokens: 128, messages: [{ role: 'user', content: prompt }], response_format: { type: 'json_object' } }) }); const d = await r.json(); if (!d.error) { const res = JSON.parse(d.choices[0].message.content); (res.tags || []).forEach(t => { if (!p.tags.includes(t)) p.tags.push(t) }) } } catch (e) { }
+      }
+      renderTags(); showToast('Tags updated for all products!', 'ok');
+    }
 
-// SEO SCORE
-function renderSEO(){
-  const items=[{n:'Title length',s:72,c:'#1a9e6a'},{n:'Keyword density',s:65,c:'#7c3aed'},{n:'Meta description',s:58,c:'#e07d00'},{n:'Tag coverage',s:80,c:'#1a9e6a'},{n:'Title uniqueness',s:90,c:'#1a9e6a'},{n:'Readability',s:76,c:'#7c3aed'}];
-  const avg=Math.round(items.reduce((s,i)=>s+i.s,0)/items.length);
-  document.getElementById('scoreNum').textContent=avg;
-  document.getElementById('scoreCircle').setAttribute('stroke-dashoffset',364-(364*(avg/100)));
-  document.getElementById('scoreBreakdown').innerHTML=items.map(i=>'<div class="score-item"><div class="score-name">'+i.n+'</div><div class="score-bar-wrap"><div class="score-bar" style="width:'+i.s+'%;background:'+i.c+'"></div></div><span style="font-size:13px;font-weight:600;color:'+i.c+'">'+i.s+'</span></div>').join('');
-  document.getElementById('seoTable').innerHTML=[...PRODUCTS].sort((a,b)=>a.seoScore-b.seoScore).map(p=>{
-    const issues=[];
-    if(p.title.length>70)issues.push('Title too long');
-    if(!p.metaTitle)issues.push('No meta title');
-    if(!p.metaDesc)issues.push('No meta desc');
-    if(p.tags.length<4)issues.push('Few tags');
-    const c=p.seoScore>=80?'var(--okt)':p.seoScore>=60?'var(--wt)':'var(--bad)';
-    return'<tr><td><div class="pc"><div class="pt2">'+p.emoji+'</div><div><div class="pn">'+p.name+'</div><div class="psk">'+p.sku+'</div></div></div></td>'+
-      '<td><span style="font-size:18px;font-weight:600;color:'+c+'">'+p.seoScore+'</span></td>'+
-      '<td>'+(issues.length?issues.map(i=>'<span class="badge bwa" style="margin:2px">'+i+'</span>').join(''):'<span class="badge bok">All good</span>')+'</td>'+
-      '<td><button class="rb" onclick="openSingle('+p.id+');goto(\'title\')">Fix now</button></td></tr>';
-  }).join('');
-}
-function recalcSEO(){PRODUCTS.forEach(p=>{p.seoScore=Math.min(95,p.seoScore+Math.floor(Math.random()*8))});renderSEO();showToast('SEO scores recalculated!','ok')}
+    // ANALYTICS
+    function renderAnalytics() {
+      const data = [{ l: 'Electronics', v: 5, c: '#7c3aed' }, { l: 'Apparel', v: 8, c: '#1a9e6a' }, { l: 'Home & Living', v: 4, c: '#e07d00' }, { l: 'Other', v: 1, c: '#616161' }];
+      document.getElementById('analyticsChart').innerHTML = data.map(d => '<div class="chart-row"><div class="chart-label">' + d.l + '</div><div class="chart-track"><div class="chart-fill" style="width:' + ((d.v / 10) * 100) + '%;background:' + d.c + '">' + d.v + ' products</div></div><div class="chart-val">' + d.v + '</div></div>').join('');
+      const acts = [
+        { p: 'SteelMug Pro', a: 'Title optimized', b: 'Insulated Travel Coffee Mug…', af: '20oz Leak-Proof Travel Mug', dt: 'Today' },
+        { p: 'Runner Pro 12', a: 'Tags updated', b: '3 tags', af: '8 tags', dt: 'Yesterday' },
+        { p: 'BT-900X', a: 'Meta generated', b: 'No meta', af: 'Meta title + desc', dt: 'Apr 1' },
+        { p: 'OptiCam HD', a: 'Title optimized', b: 'Security Camera 1080P…', af: '1080P WiFi Security Camera', dt: 'Mar 31' },
+      ];
+      document.getElementById('actLog').innerHTML = acts.map(a => '<tr><td><strong>' + a.p + '</strong></td><td><span class="badge bma">' + a.a + '</span></td><td class="tc">' + a.b + '</td><td class="tc">' + a.af + '</td><td style="color:var(--t2);font-size:12px">' + a.dt + '</td></tr>').join('');
+    }
 
-// API KEYS PAGE
-function renderAPIKeys(){
-  document.getElementById('keyDisplay').textContent=apiKey?apiKey.substring(0,12)+'…':'Not set';
-  document.getElementById('apiStatus').textContent=apiKey?'Connected':'Not connected';
-  document.getElementById('apiStatus').className=apiKey?'badge bok':'badge bdf';
-}
-function editKey(){
-  const val=prompt('Enter your OpenAI API key:','');
-  if(val!==null&&val.trim()){apiKey=val.trim();document.getElementById('apiKeyInput').value=apiKey;document.getElementById('apiBanner').style.display='none';renderAPIKeys();showToast('API key updated!','ok')}
-}
-function clearKey(){apiKey='';renderAPIKeys();document.getElementById('apiKeyInput').value='';document.getElementById('apiBanner').style.display='flex';showToast('API key cleared','def')}
-async function testAPIKey(){
-  if(!apiKey){showToast('No API key set — enter one first','err');return}
-  showToast('Testing connection…','def');
-  try{
-    const r=await fetch('https://api.openai.com/v1/models',{headers:{'Authorization':'Bearer '+apiKey}});
-    if(r.ok){showToast('Connection successful! ✓','ok');document.getElementById('apiStatus').textContent='Connected';document.getElementById('apiStatus').className='badge bok'}
-    else{showToast('Connection failed — check your API key','err');document.getElementById('apiStatus').textContent='Error';document.getElementById('apiStatus').className='badge bwa'}
-  }catch(e){showToast('Network error: '+e.message,'err')}
-}
-function saveShopify(){const s=document.getElementById('shopifyStore').value.trim();if(s)document.getElementById('storeName').textContent=s;showToast('Shopify settings saved!','ok')}
+    // SEO SCORE
+    function renderSEO() {
+      const items = [{ n: 'Title length', s: 72, c: '#1a9e6a' }, { n: 'Keyword density', s: 65, c: '#7c3aed' }, { n: 'Meta description', s: 58, c: '#e07d00' }, { n: 'Tag coverage', s: 80, c: '#1a9e6a' }, { n: 'Title uniqueness', s: 90, c: '#1a9e6a' }, { n: 'Readability', s: 76, c: '#7c3aed' }];
+      const avg = Math.round(items.reduce((s, i) => s + i.s, 0) / items.length);
+      document.getElementById('scoreNum').textContent = avg;
+      document.getElementById('scoreCircle').setAttribute('stroke-dashoffset', 364 - (364 * (avg / 100)));
+      document.getElementById('scoreBreakdown').innerHTML = items.map(i => '<div class="score-item"><div class="score-name">' + i.n + '</div><div class="score-bar-wrap"><div class="score-bar" style="width:' + i.s + '%;background:' + i.c + '"></div></div><span style="font-size:13px;font-weight:600;color:' + i.c + '">' + i.s + '</span></div>').join('');
+      document.getElementById('seoTable').innerHTML = [...PRODUCTS].sort((a, b) => a.seoScore - b.seoScore).map(p => {
+        const issues = [];
+        if (p.title.length > 70) issues.push('Title too long');
+        if (!p.metaTitle) issues.push('No meta title');
+        if (!p.metaDesc) issues.push('No meta desc');
+        if (p.tags.length < 4) issues.push('Few tags');
+        const c = p.seoScore >= 80 ? 'var(--okt)' : p.seoScore >= 60 ? 'var(--wt)' : 'var(--bad)';
+        return '<tr><td><div class="pc"><div class="pt2">' + p.emoji + '</div><div><div class="pn">' + p.name + '</div><div class="psk">' + p.sku + '</div></div></div></td>' +
+          '<td><span style="font-size:18px;font-weight:600;color:' + c + '">' + p.seoScore + '</span></td>' +
+          '<td>' + (issues.length ? issues.map(i => '<span class="badge bwa" style="margin:2px">' + i + '</span>').join('') : '<span class="badge bok">All good</span>') + '</td>' +
+          '<td><button class="rb" onclick="openSingle(' + p.id + ');goto(\'title\')">Fix now</button></td></tr>';
+      }).join('');
+    }
+    function recalcSEO() { PRODUCTS.forEach(p => { p.seoScore = Math.min(95, p.seoScore + Math.floor(Math.random() * 8)) }); renderSEO(); showToast('SEO scores recalculated!', 'ok') }
 
-function closeMo(id){document.getElementById(id).classList.remove('open')}
-function showToast(msg,type='def'){
-  const w=document.getElementById('tws'),t=document.createElement('div');
-  t.className='toast t'+type;t.innerHTML='<span>'+(type==='ok'?'✓':type==='err'?'✕':'ℹ')+'</span><span>'+msg+'</span>';
-  w.appendChild(t);setTimeout(()=>t.remove(),3800);
-}
-document.getElementById('optModal').addEventListener('click',function(e){if(e.target===this)closeMo('optModal')});
-document.getElementById('tagModal').addEventListener('click',function(e){if(e.target===this)closeMo('tagModal')});
+    // API KEYS PAGE
+    function renderAPIKeys() {
+      document.getElementById('keyDisplay').textContent = apiKey ? apiKey.substring(0, 12) + '…' : 'Not set';
+      document.getElementById('apiStatus').textContent = apiKey ? 'Connected' : 'Not connected';
+      document.getElementById('apiStatus').className = apiKey ? 'badge bok' : 'badge bdf';
+    }
+    function editKey() {
+      const val = prompt('Enter your OpenAI API key:', '');
+      if (val !== null && val.trim()) { apiKey = val.trim(); document.getElementById('apiKeyInput').value = apiKey; document.getElementById('apiBanner').style.display = 'none'; renderAPIKeys(); showToast('API key updated!', 'ok') }
+    }
+    function clearKey() { apiKey = ''; renderAPIKeys(); document.getElementById('apiKeyInput').value = ''; document.getElementById('apiBanner').style.display = 'flex'; showToast('API key cleared', 'def') }
+    async function testAPIKey() {
+      if (!apiKey) { showToast('No API key set — enter one first', 'err'); return }
+      showToast('Testing connection…', 'def');
+      try {
+        const r = await fetch('https://api.openai.com/v1/models', { headers: { 'Authorization': 'Bearer ' + apiKey } });
+        if (r.ok) { showToast('Connection successful! ✓', 'ok'); document.getElementById('apiStatus').textContent = 'Connected'; document.getElementById('apiStatus').className = 'badge bok' }
+        else { showToast('Connection failed — check your API key', 'err'); document.getElementById('apiStatus').textContent = 'Error'; document.getElementById('apiStatus').className = 'badge bwa' }
+      } catch (e) { showToast('Network error: ' + e.message, 'err') }
+    }
+    function saveShopify() { const s = document.getElementById('shopifyStore').value.trim(); if (s) document.getElementById('storeName').textContent = s; showToast('Shopify settings saved!', 'ok') }
 
-updateStats();
-renderTable();
-</script>
+    function closeMo(id) { document.getElementById(id).classList.remove('open') }
+    function showToast(msg, type = 'def') {
+      const w = document.getElementById('tws'), t = document.createElement('div');
+      t.className = 'toast t' + type; t.innerHTML = '<span>' + (type === 'ok' ? '✓' : type === 'err' ? '✕' : 'ℹ') + '</span><span>' + msg + '</span>';
+      w.appendChild(t); setTimeout(() => t.remove(), 3800);
+    }
+    document.getElementById('optModal').addEventListener('click', function (e) { if (e.target === this) closeMo('optModal') });
+    document.getElementById('tagModal').addEventListener('click', function (e) { if (e.target === this) closeMo('tagModal') });
+
+    // Load real Shopify products if available
+    async function loadShopifyProducts() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const shop = urlParams.get('shop');
+      if (!shop) return; // use demo products if no shop
+
+      try {
+        showToast('Loading your Shopify products…', 'def');
+        const res = await fetch('/api/products?shop=' + shop);
+        const data = await res.json();
+
+        if (data.products && data.products.length > 0) {
+          // Replace demo products with real ones
+          PRODUCTS.length = 0;
+          data.products.forEach((p, i) => {
+            PRODUCTS.push({
+              id: p.id,
+              name: p.name,
+              title: p.title,
+              sku: p.sku,
+              emoji: ['🛍', '📦', '🎁', '⭐', '💎', '🔥', '✨', '🎯'][i % 8],
+              status: p.status === 'active' ? 'active' : 'draft',
+              collection: 'Shopify',
+              optimized: false,
+              tags: [],
+              metaTitle: '',
+              metaDesc: '',
+              seoScore: Math.floor(Math.random() * 40) + 40
+            });
+          });
+
+          filtered = [...PRODUCTS];
+          document.getElementById('storeName').textContent = shop;
+          showToast('Loaded ' + PRODUCTS.length + ' products from ' + shop, 'ok');
+          updateStats();
+          renderTable();
+        }
+      } catch (err) {
+        console.log('Using demo products:', err.message);
+      }
+    }
+
+    loadShopifyProducts();
+
+    updateStats();
+    renderTable();
+  </script>
 </body>
+
 </html>
