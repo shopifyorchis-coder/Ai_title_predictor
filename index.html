@@ -1349,7 +1349,7 @@
   <div class="frame">
     <nav class="nav">
       <div class="nsec">AI Tools</div>
-      <div class="ni active" onclick="goto('title')">✦ Title Optimizer</div>
+      <div class="ni" onclick="goto('title')">✦ Title Optimizer</div>
       <div class="ni" onclick="goto('meta')">📝 SEO Meta Editor</div>
       <div class="ni" onclick="goto('tags')">🏷 Tag Suggester</div>
       <div class="nsep"></div>
@@ -1359,7 +1359,7 @@
       <div class="nsep"></div>
       <div class="nsec">Settings</div>
       <div class="ni" onclick="goto('prefs')">⚙️ Preferences</div>
-      <div class="ni" onclick="goto('billing')">📦 Billing</div>
+      <div class="ni active" onclick="goto('billing')">📦 Billing</div>
       <div class="nsp"></div>
       <div class="usage">
         <div class="urow"><span class="utitle">Monthly usage</span><span class="uct" id="uct">0 / 50</span></div>
@@ -1371,7 +1371,7 @@
     </nav>
 
     <!-- PAGE: TITLE OPTIMIZER -->
-    <div class="page active" id="page-title">
+    <div class="page" id="page-title">
       <div class="banner bwarn" id="apiBanner">
         <div style="flex:1;min-width:200px">
           <div class="btitle">Server-side AI setup required</div>
@@ -1743,7 +1743,7 @@
     </div>
 
     <!-- PAGE: BILLING -->
-    <div class="page" id="page-billing">
+    <div class="page active" id="page-billing">
       <div class="ph">
         <div>
           <div class="ptitle">Billing &amp; Plans</div>
@@ -1765,17 +1765,17 @@
           <div class="card-title">Pro</div>
           <div style="font-size:28px;font-weight:600;margin-bottom:4px">$9.99<span
               style="font-size:14px;font-weight:400;color:var(--t2)">/mo</span></div>
-          <div class="card-sub">1000 optimizations/month<br>All AI tools<br>Full Reports &amp; SEO Score</div>
+          <div class="card-sub">7-day free trial<br>1000 optimizations/month<br>All AI tools<br>Full Reports &amp; SEO Score</div>
           <button class="btn bm" style="width:100%;margin-top:4px"
-            onclick="showToast('Redirecting to checkout…','def')">Upgrade to Pro</button>
+            onclick="showToast('Starting 7-day Pro trial…','def')">Start 7-day trial</button>
         </div>
         <div class="card">
           <div class="card-title">Enterprise</div>
           <div style="font-size:28px;font-weight:600;margin-bottom:4px">$29.99<span
               style="font-size:14px;font-weight:400;color:var(--t2)">/mo</span></div>
-          <div class="card-sub">Unlimited optimizations/month<br>All AI tools<br>Full Reports &amp; SEO Score</div>
+          <div class="card-sub">7-day free trial<br>Unlimited optimizations/month<br>All AI tools<br>Full Reports &amp; SEO Score</div>
           <button class="btn bp" style="width:100%;margin-top:4px"
-            onclick="showToast('Contact sales@titleboost.ai','def')">Contact sales</button>
+            onclick="showToast('Starting 7-day Enterprise trial…','def')">Start 7-day trial</button>
         </div>
       </div>
       <div class="sgrp">
