@@ -1833,18 +1833,9 @@
   <div class="tws" id="tws"></div>
 
   <script>
-    const PRODUCTS = [
-      { id: 1, name: "BT-900X", title: "Wireless Headphones Black 2024 Model Noise Cancelling Over Ear Premium", sku: "HP-001", emoji: "🎧", status: "active", collection: "Electronics", optimized: false, tags: ["headphones", "wireless", "noise cancelling"], metaTitle: "", metaDesc: "", seoScore: 62 },
-      { id: 2, name: "CoolBreeze X3", title: "Portable Air Conditioner Fan Humidifier Evaporative Desktop USB White", sku: "AC-220", emoji: "🌀", status: "active", collection: "Electronics", optimized: false, tags: ["fan", "air conditioner", "desktop"], metaTitle: "", metaDesc: "", seoScore: 55 },
-      { id: 3, name: "Runner Pro 12", title: "Running Shoes Men's Lightweight Breathable Sport Athletic Gym", sku: "SH-412", emoji: "👟", status: "active", collection: "Apparel", optimized: true, tags: ["running", "shoes", "athletic", "gym", "sport"], metaTitle: "Runner Pro 12 – Lightweight Running Shoes", metaDesc: "High performance running shoes for men. Lightweight breathable design for gym and outdoor runs.", seoScore: 88 },
-      { id: 4, name: "SlimFit Backpack", title: "Laptop Backpack 15.6 Inch Waterproof USB Charging School Travel Business", sku: "BP-055", emoji: "🎒", status: "draft", collection: "Apparel", optimized: false, tags: ["backpack", "laptop", "waterproof"], metaTitle: "", metaDesc: "", seoScore: 48 },
-      { id: 5, name: "OptiCam HD", title: "Security Camera 1080P Outdoor Wireless WiFi Night Vision IP Camera", sku: "CM-199", emoji: "📷", status: "active", collection: "Electronics", optimized: false, tags: ["security", "camera", "wifi", "outdoor"], metaTitle: "", metaDesc: "", seoScore: 61 },
-      { id: 6, name: "SteelMug Pro", title: "Insulated Travel Coffee Mug 20oz Stainless Steel Leak Proof Car Cup", sku: "MG-033", emoji: "☕", status: "active", collection: "Home", optimized: true, tags: ["mug", "coffee", "insulated", "travel", "stainless"], metaTitle: "SteelMug Pro – 20oz Insulated Travel Mug", metaDesc: "Keep drinks hot or cold for 12 hours. Leak-proof stainless steel travel mug for commuters.", seoScore: 91 },
-      { id: 7, name: "NanoWatch S7", title: "Smart Watch Men Women Fitness Tracker Heart Rate Blood Pressure Monitor", sku: "WA-771", emoji: "⌚", status: "active", collection: "Electronics", optimized: false, tags: ["smartwatch", "fitness", "tracker", "health"], metaTitle: "", metaDesc: "", seoScore: 57 },
-      { id: 8, name: "FlexiDesk", title: "Standing Desk Converter Adjustable Height Sit Stand Workstation Large", sku: "DS-884", emoji: "🖥️", status: "draft", collection: "Home", optimized: false, tags: ["desk", "standing", "ergonomic"], metaTitle: "", metaDesc: "", seoScore: 44 },
-    ];
+    const PRODUCTS = [];
 
-    let sel = new Set(), apiReady = false, genRes = {}, filtered = [...PRODUCTS], stF = '', colF = '', curPg = 1;
+    let sel = new Set(), apiReady = false, genRes = {}, filtered = [], stF = '', colF = '', curPg = 1, productsLoading = false;
     let curTagProd = null, genTags = [];
 
     function cc(n) { return n <= 60 ? 'cok' : n <= 70 ? 'cwn' : 'cbd' }
@@ -1861,6 +1852,18 @@
       showToast('Set OPENAI_API_KEY on the server, then test the connection here.', 'err');
       goto('apikeys');
       return false;
+    }
+    function getShopFromUrl() {
+      const urlParams = new URLSearchParams(window.location.search);
+      return (urlParams.get('shop') || '').trim().toLowerCase();
+    }
+    function hasConnectedStore() {
+      return Boolean(getShopFromUrl());
+    }
+    function getEmptyStateMessage() {
+      if (productsLoading) return { icon: '⏳', text: 'Loading your Shopify products...' };
+      if (hasConnectedStore()) return { icon: '📦', text: 'No Shopify products found for this store yet' };
+      return { icon: '🔗', text: 'Install and connect your Shopify store to load products here' };
     }
 
     function goto(page) {
@@ -1879,7 +1882,7 @@
 
     function updateStats() {
       const opt = PRODUCTS.filter(p => p.optimized).length;
-      const avg = Math.round(PRODUCTS.reduce((s, p) => s + p.title.length, 0) / PRODUCTS.length);
+      const avg = PRODUCTS.length ? Math.round(PRODUCTS.reduce((s, p) => s + p.title.length, 0) / PRODUCTS.length) : 0;
       document.getElementById('totalCt').textContent = PRODUCTS.length;
       document.getElementById('optCt').textContent = opt;
       document.getElementById('avgLen').textContent = avg;
@@ -1895,7 +1898,13 @@
       const s = (curPg - 1) * 8, e = s + 8, items = filtered.slice(s, e);
       const maxPg = Math.ceil(filtered.length / 8);
       document.getElementById('pg2').style.display = maxPg > 1 ? 'flex' : 'none';
-      if (!filtered.length) { tb.innerHTML = `<tr><td colspan="6"><div class="empty"><div class="ei">🔍</div><div class="et">No products found</div></div></td></tr>`; return }
+      if (!filtered.length) {
+        const emptyState = getEmptyStateMessage();
+        document.getElementById('pgInfo').textContent = 'Showing 0 of 0';
+        document.getElementById('chkAll').checked = false;
+        tb.innerHTML = `<tr><td colspan="6"><div class="empty"><div class="ei">${emptyState.icon}</div><div class="et">${escapeHtml(emptyState.text)}</div></div></td></tr>`;
+        return;
+      }
       items.forEach(p => {
         const n = p.title.length;
         const badge = p.optimized ? `<span class="badge bma">Optimized</span>` : p.status === 'active' ? `<span class="badge bok">Active</span>` : `<span class="badge bdf">Draft</span>`;
@@ -2163,20 +2172,31 @@
 
     // ANALYTICS
     function renderAnalytics() {
-      const data = [{ l: 'Electronics', v: 5, c: '#7c3aed' }, { l: 'Apparel', v: 8, c: '#1a9e6a' }, { l: 'Home & Living', v: 4, c: '#e07d00' }, { l: 'Other', v: 1, c: '#616161' }];
+      const collectionCounts = PRODUCTS.reduce((acc, product) => {
+        const key = product.collection || 'Other';
+        acc[key] = (acc[key] || 0) + 1;
+        return acc;
+      }, {});
+      const palette = ['#7c3aed', '#1a9e6a', '#e07d00', '#616161', '#005bd3', '#c92a2a'];
+      const data = Object.keys(collectionCounts).length
+        ? Object.entries(collectionCounts).map(([label, value], index) => ({ l: label, v: value, c: palette[index % palette.length] }))
+        : [{ l: 'No products yet', v: 0, c: '#616161' }];
       document.getElementById('analyticsChart').innerHTML = data.map(d => '<div class="chart-row"><div class="chart-label">' + d.l + '</div><div class="chart-track"><div class="chart-fill" style="width:' + ((d.v / 10) * 100) + '%;background:' + d.c + '">' + d.v + ' products</div></div><div class="chart-val">' + d.v + '</div></div>').join('');
-      const acts = [
-        { p: 'SteelMug Pro', a: 'Title optimized', b: 'Insulated Travel Coffee Mug…', af: '20oz Leak-Proof Travel Mug', dt: 'Today' },
-        { p: 'Runner Pro 12', a: 'Tags updated', b: '3 tags', af: '8 tags', dt: 'Yesterday' },
-        { p: 'BT-900X', a: 'Meta generated', b: 'No meta', af: 'Meta title + desc', dt: 'Apr 1' },
-        { p: 'OptiCam HD', a: 'Title optimized', b: 'Security Camera 1080P…', af: '1080P WiFi Security Camera', dt: 'Mar 31' },
-      ];
+      const acts = PRODUCTS.slice(0, 4).map((product) => ({
+        p: product.name,
+        a: product.optimized ? 'Title optimized' : 'Imported from Shopify',
+        b: product.optimized ? product.title : product.status,
+        af: product.optimized ? 'Ready in app' : 'Available to optimize',
+        dt: 'Today'
+      }));
       document.getElementById('actLog').innerHTML = acts.map(a => '<tr><td><strong>' + a.p + '</strong></td><td><span class="badge bma">' + a.a + '</span></td><td class="tc">' + a.b + '</td><td class="tc">' + a.af + '</td><td style="color:var(--t2);font-size:12px">' + a.dt + '</td></tr>').join('');
     }
 
     // SEO SCORE
     function renderSEO() {
-      const items = [{ n: 'Title length', s: 72, c: '#1a9e6a' }, { n: 'Keyword density', s: 65, c: '#7c3aed' }, { n: 'Meta description', s: 58, c: '#e07d00' }, { n: 'Tag coverage', s: 80, c: '#1a9e6a' }, { n: 'Title uniqueness', s: 90, c: '#1a9e6a' }, { n: 'Readability', s: 76, c: '#7c3aed' }];
+      const items = PRODUCTS.length
+        ? [{ n: 'Title length', s: 72, c: '#1a9e6a' }, { n: 'Keyword density', s: 65, c: '#7c3aed' }, { n: 'Meta description', s: 58, c: '#e07d00' }, { n: 'Tag coverage', s: 80, c: '#1a9e6a' }, { n: 'Title uniqueness', s: 90, c: '#1a9e6a' }, { n: 'Readability', s: 76, c: '#7c3aed' }]
+        : [{ n: 'Store connection', s: 0, c: '#616161' }];
       const avg = Math.round(items.reduce((s, i) => s + i.s, 0) / items.length);
       document.getElementById('scoreNum').textContent = avg;
       document.getElementById('scoreCircle').setAttribute('stroke-dashoffset', 364 - (364 * (avg / 100)));
@@ -2192,7 +2212,7 @@
           '<td><span style="font-size:18px;font-weight:600;color:' + c + '">' + p.seoScore + '</span></td>' +
           '<td>' + (issues.length ? issues.map(i => '<span class="badge bwa" style="margin:2px">' + i + '</span>').join('') : '<span class="badge bok">All good</span>') + '</td>' +
           '<td><button class="rb" onclick="openSingle(' + p.id + ');goto(\'title\')">Fix now</button></td></tr>';
-      }).join('');
+      }).join('') || '<tr><td colspan="4"><div class="empty"><div class="ei">📭</div><div class="et">Connect your store to see SEO scores</div></div></td></tr>';
     }
     function recalcSEO() { PRODUCTS.forEach(p => { p.seoScore = Math.min(95, p.seoScore + Math.floor(Math.random() * 8)) }); renderSEO(); showToast('SEO scores recalculated!', 'ok') }
 
@@ -2231,43 +2251,53 @@
 
     // Load real Shopify products if available
     async function loadShopifyProducts() {
-      const urlParams = new URLSearchParams(window.location.search);
-      const shop = urlParams.get('shop');
-      if (!shop) return; // use demo products if no shop
+      const shop = getShopFromUrl();
+      productsLoading = true;
+      renderTable();
+      if (!shop) {
+        productsLoading = false;
+        filtered = [];
+        updateStats();
+        renderTable();
+        return;
+      }
 
       try {
         showToast('Loading your Shopify products…', 'def');
         const res = await fetch('/api/products?shop=' + shop);
         const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Could not load Shopify products');
 
-        if (data.products && data.products.length > 0) {
-          // Replace demo products with real ones
-          PRODUCTS.length = 0;
-          data.products.forEach((p, i) => {
-            PRODUCTS.push({
-              id: p.id,
-              name: p.name,
-              title: p.title,
-              sku: p.sku,
-              emoji: ['🛍', '📦', '🎁', '⭐', '💎', '🔥', '✨', '🎯'][i % 8],
-              status: p.status === 'active' ? 'active' : 'draft',
-              collection: 'Shopify',
-              optimized: false,
-              tags: [],
-              metaTitle: '',
-              metaDesc: '',
-              seoScore: Math.floor(Math.random() * 40) + 40
-            });
+        PRODUCTS.length = 0;
+        (data.products || []).forEach((p, i) => {
+          PRODUCTS.push({
+            id: p.id,
+            name: p.name,
+            title: p.title,
+            sku: p.sku,
+            emoji: ['🛍', '📦', '🎁', '⭐', '💎', '🔥', '✨', '🎯'][i % 8],
+            status: p.status === 'active' ? 'active' : 'draft',
+            collection: 'Shopify',
+            optimized: false,
+            tags: [],
+            metaTitle: '',
+            metaDesc: '',
+            seoScore: Math.floor(Math.random() * 40) + 40
           });
+        });
 
-          filtered = [...PRODUCTS];
-          document.getElementById('storeName').textContent = shop;
-          showToast('Loaded ' + PRODUCTS.length + ' products from ' + shop, 'ok');
-          updateStats();
-          renderTable();
-        }
+        filtered = [...PRODUCTS];
+        document.getElementById('storeName').textContent = shop;
+        showToast('Loaded ' + PRODUCTS.length + ' products from ' + shop, 'ok');
       } catch (err) {
-        console.log('Using demo products:', err.message);
+        PRODUCTS.length = 0;
+        filtered = [];
+        console.log('Shopify products load failed:', err.message);
+        showToast('Could not load Shopify products: ' + err.message, 'err');
+      } finally {
+        productsLoading = false;
+        updateStats();
+        renderTable();
       }
     }
 
