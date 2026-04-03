@@ -2276,7 +2276,9 @@
         showToast('Shop domain not found in the app URL.', 'err');
         return;
       }
-      window.location.href = '/auth?shop=' + encodeURIComponent(shop);
+      const authUrl = '/auth?shop=' + encodeURIComponent(shop);
+      if (window.top) window.top.location.href = authUrl;
+      else window.location.href = authUrl;
     }
     function showToast(msg, type = 'def') {
       const w = document.getElementById('tws'), t = document.createElement('div');
