@@ -36,6 +36,7 @@ const {
 const SHOPIFY_API_VERSION = '2024-01';
 const SHOP_DOMAIN_REGEX = /^[a-z0-9][a-z0-9-]*\.myshopify\.com$/;
 const INDEX_HTML = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
+const TOKENS_PATH = path.join(__dirname, 'shop_tokens.json');
 
 function normalizeShop(shop) {
   if (typeof shop !== 'string') return null;
@@ -45,6 +46,44 @@ function normalizeShop(shop) {
 
 function buildShopifyUrl(shop, pathname) {
   return `https://${shop}${pathname}`;
+}
+
+function readTokenStore() {
+  try {
+    if (!fs.existsSync(TOKENS_PATH)) return {};
+    return JSON.parse(fs.readFileSync(TOKENS_PATH, 'utf8'));
+  } catch (error) {
+    console.error('Token store read error:', error.message);
+    return {};
+  }
+}
+
+function writeTokenStore(store) {
+  fs.writeFileSync(TOKENS_PATH, JSON.stringify(store, null, 2));
+}
+
+function saveShopAuth(shop, accessToken, host) {
+  const store = readTokenStore();
+  store[shop] = {
+    accessToken,
+    host: host || '',
+    updatedAt: new Date().toISOString()
+  };
+  writeTokenStore(store);
+}
+
+function getStoredShopAuth(shop) {
+  const normalizedShop = normalizeShop(shop);
+  if (!normalizedShop) return null;
+
+  const record = readTokenStore()[normalizedShop];
+  if (!record || !record.accessToken) return null;
+
+  return {
+    shop: normalizedShop,
+    accessToken: record.accessToken,
+    host: normalizeHost(record.host) || null
+  };
 }
 
 function normalizeHost(host) {
@@ -63,7 +102,8 @@ function buildAppRedirectQuery(params) {
 
 function renderEmbeddedHtml(req) {
   const shop = normalizeShop(req.query.shop || req.session.shop);
-  const host = normalizeHost(req.query.host || req.session.host);
+  const storedAuth = shop ? getStoredShopAuth(shop) : null;
+  const host = normalizeHost(req.query.host || req.session.host || storedAuth?.host);
   const embedded = typeof req.query.embedded === 'string'
     ? req.query.embedded
     : (req.session.embedded ? '1' : '');
@@ -113,12 +153,26 @@ function getSessionAuth(req, res) {
   const shop = normalizeShop(req.query.shop || req.session.shop);
   const accessToken = req.session.accessToken;
 
-  if (!shop || !accessToken || shop !== req.session.shop) {
+  if (!shop) {
     res.status(401).json({ error: 'Not authenticated' });
     return null;
   }
 
-  return { shop, accessToken };
+  if (accessToken && shop === req.session.shop) {
+    return { shop, accessToken };
+  }
+
+  const storedAuth = getStoredShopAuth(shop);
+  if (!storedAuth) {
+    res.status(401).json({ error: 'Not authenticated' });
+    return null;
+  }
+
+  req.session.shop = storedAuth.shop;
+  req.session.accessToken = storedAuth.accessToken;
+  req.session.host = storedAuth.host;
+
+  return { shop: storedAuth.shop, accessToken: storedAuth.accessToken };
 }
 
 async function generateJsonCompletion(prompt, maxTokens = 512) {
@@ -191,6 +245,7 @@ app.get('/auth/callback', async (req, res) => {
     req.session.accessToken = tokenRes.data.access_token;
     req.session.host = host || null;
     req.session.embedded = Boolean(embedded);
+    saveShopAuth(normalizedShop, tokenRes.data.access_token, host);
     delete req.session.state;
 
     console.log(`Shop installed: ${normalizedShop}`);
@@ -264,11 +319,13 @@ app.put('/api/products/:id', async (req, res) => {
 });
 
 app.get('/api/config', (req, res) => {
+  const shop = normalizeShop(req.query.shop || req.session.shop);
+  const storedAuth = shop ? getStoredShopAuth(shop) : null;
   res.json({
     openaiConfigured: Boolean(OPENAI_API_KEY),
     shopifyApiKey: SHOPIFY_API_KEY || '',
-    host: normalizeHost(req.query.host || req.session.host) || '',
-    shop: normalizeShop(req.query.shop || req.session.shop) || ''
+    host: normalizeHost(req.query.host || req.session.host || storedAuth?.host) || '',
+    shop: shop || ''
   });
 });
 
