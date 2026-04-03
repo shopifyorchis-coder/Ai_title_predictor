@@ -1440,7 +1440,7 @@
     <div class="tdiv"></div>
     <div class="tstore" id="storeName">demo-store.myshopify.com</div>
     <div class="tsp"></div>
-    <div class="tpill">Free Plan · GPT-4o</div>
+    <div class="tpill" id="planPill">Free Plan · GPT-4o</div>
   </header>
   <div class="frame">
     <nav class="nav">
@@ -1679,15 +1679,15 @@
       </div>
     </div>
 
-    <!-- PAGE: API KEYS -->
-    <div class="page" id="page-apikeys">
+    <!-- PAGE: PREFERENCES -->
+    <div class="page" id="page-prefs">
       <div class="ph">
         <div>
-          <div class="ptitle">Connections</div>
-          <div class="psub">Server-managed integrations for OpenAI and Shopify</div>
+          <div class="ptitle">Preferences</div>
+          <div class="psub">Customize how TitleBoost AI works for you</div>
         </div>
       </div>
-      </div>
+      <!--
       <div class="sgrp">
         <div class="sgh">
           <div class="sgt">OpenAI</div>
@@ -1752,6 +1752,7 @@
       </div>
     </div>
 
+    -->
     <!-- PAGE: PREFERENCES -->
     <div class="page" id="page-prefs">
       <div class="ph">
@@ -1854,9 +1855,9 @@
           <div class="plan-price">$0 <span>/month</span></div>
           <div class="plan-note">A simple starting point for testing the app on your store.</div>
           <div class="plan-trial">Start instantly with no trial needed</div>
-          <span class="badge bok">Current plan</span>
-          <button class="btn bs" style="width:100%;margin-top:16px"
-            onclick="showToast('Free plan selected. You can start using the app now.','ok')">Select Free plan</button>
+          <span class="badge bok" id="freePlanBadge">Current plan</span>
+          <button class="btn bs" id="freePlanBtn" style="width:100%;margin-top:16px"
+            onclick="selectPlan('free')">Select Free plan</button>
           <ul class="plan-features">
             <li>50 title optimizations each month</li>
             <li>Title Optimizer access only</li>
@@ -1870,8 +1871,8 @@
           <div class="plan-price">$9.99 <span>/month</span></div>
           <div class="plan-note">A practical plan for merchants who optimize products every week.</div>
           <div class="plan-trial">Includes a 7-day free trial</div>
-          <button class="btn bm" style="width:100%;margin-top:16px"
-            onclick="showToast('Pro plan selected. Starting 7-day trial...','def')">Select Pro plan</button>
+          <button class="btn bm" id="proPlanBtn" style="width:100%;margin-top:16px"
+            onclick="selectPlan('pro')">Select Pro plan</button>
           <ul class="plan-features">
             <li>1000 title optimizations every month</li>
             <li>SEO Meta Editor and Tag Suggester</li>
@@ -1885,8 +1886,8 @@
           <div class="plan-price">$29.99 <span>/month</span></div>
           <div class="plan-note">Made for larger catalogs that need more automation every day.</div>
           <div class="plan-trial">Includes a 7-day free trial</div>
-          <button class="btn bp" style="width:100%;margin-top:16px"
-            onclick="showToast('Enterprise plan selected. Starting 7-day trial...','def')">Select Enterprise plan</button>
+          <button class="btn bp" id="enterprisePlanBtn" style="width:100%;margin-top:16px"
+            onclick="selectPlan('enterprise')">Select Enterprise plan</button>
           <ul class="plan-features">
             <li>Unlimited title optimizations per month</li>
             <li>All AI tools unlocked</li>
@@ -1895,6 +1896,7 @@
           </ul>
         </div>
       </div>
+      <!--
       <div style="display:none">
         <div class="card" style="border:2px solid var(--border)">
           <div class="card-title">Free</div>
@@ -1925,6 +1927,8 @@
             onclick="showToast('Enterprise plan selected. Starting 7-day trial…','def')">Select Enterprise plan</button>
         </div>
       </div>
+      </div>
+      -->
       <div class="sgrp">
         <div class="sgh">
           <div class="sgt">Usage this month</div>
@@ -2019,6 +2023,12 @@
 
     let sel = new Set(), apiReady = false, genRes = {}, filtered = [], stF = '', colF = '', curPg = 1, productsLoading = false;
     let curTagProd = null, genTags = [];
+    const PLAN_CONFIG = {
+      free: { name: 'Free Plan', limit: 50, toast: 'Free plan selected. You can start using the app now.' },
+      pro: { name: 'Pro Plan', limit: 1000, toast: 'Pro plan selected. Your 7-day trial is ready.' },
+      enterprise: { name: 'Enterprise Plan', limit: Infinity, toast: 'Enterprise plan selected. Your 7-day trial is ready.' }
+    };
+    let currentPlan = (localStorage.getItem('tb_plan') || 'free').toLowerCase();
 
     function cc(n) { return n <= 60 ? 'cok' : n <= 70 ? 'cwn' : 'cbd' }
     function escapeHtml(value) {
@@ -2070,21 +2080,57 @@
       if (page === 'tags') renderTags();
       if (page === 'analytics') renderAnalytics();
       if (page === 'seo') renderSEO();
-      if (page === 'apikeys') renderAPIKeys();
+    }
+
+    function getPlanLimit() {
+      return PLAN_CONFIG[currentPlan]?.limit ?? 50;
+    }
+
+    function formatPlanUsage(value) {
+      const limit = getPlanLimit();
+      return limit === Infinity ? value + ' / Unlimited' : value + ' / ' + limit;
+    }
+
+    function updatePlanUI() {
+      const pill = document.getElementById('planPill');
+      if (pill) pill.textContent = (PLAN_CONFIG[currentPlan]?.name || 'Free Plan') + ' · GPT-4o';
+
+      const freeBadge = document.getElementById('freePlanBadge');
+      if (freeBadge) freeBadge.style.display = currentPlan === 'free' ? 'inline-flex' : 'none';
+
+      const buttonMap = {
+        free: document.getElementById('freePlanBtn'),
+        pro: document.getElementById('proPlanBtn'),
+        enterprise: document.getElementById('enterprisePlanBtn')
+      };
+      Object.entries(buttonMap).forEach(([plan, btn]) => {
+        if (!btn) return;
+        btn.textContent = currentPlan === plan ? 'Selected' : 'Select ' + PLAN_CONFIG[plan].name.replace(' Plan', ' plan');
+      });
+    }
+
+    function selectPlan(plan) {
+      currentPlan = PLAN_CONFIG[plan] ? plan : 'free';
+      localStorage.setItem('tb_plan', currentPlan);
+      updatePlanUI();
+      updateStats();
+      showToast(PLAN_CONFIG[currentPlan].toast, currentPlan === 'free' ? 'ok' : 'def');
+      goto('title');
     }
 
     function updateStats() {
       const opt = PRODUCTS.filter(p => p.updatedAtApp).length;
       const avg = PRODUCTS.length ? Math.round(PRODUCTS.reduce((s, p) => s + p.title.length, 0) / PRODUCTS.length) : 0;
+      const limit = getPlanLimit();
       document.getElementById('totalCt').textContent = PRODUCTS.length;
       document.getElementById('optCt').textContent = opt;
       document.getElementById('avgLen').textContent = avg;
-      document.getElementById('uct').textContent = opt + ' / 50';
-      document.getElementById('ub').style.width = Math.round((opt / 50) * 100) + '%';
+      document.getElementById('uct').textContent = formatPlanUsage(opt);
+      document.getElementById('ub').style.width = limit === Infinity ? Math.min(100, opt) + '%' : Math.min(100, Math.round((opt / Math.max(limit, 1)) * 100)) + '%';
       document.getElementById('anOpt').textContent = opt;
       document.getElementById('anSEO').textContent = avg;
-      document.getElementById('anCr').innerHTML = opt + '<span style="font-size:14px;color:var(--t2)">/50</span>';
-      document.getElementById('bilOpt').textContent = opt + ' / 50';
+      document.getElementById('anCr').innerHTML = limit === Infinity ? opt + '<span style="font-size:14px;color:var(--t2)">/Unlimited</span>' : opt + '<span style="font-size:14px;color:var(--t2)">/' + limit + '</span>';
+      document.getElementById('bilOpt').textContent = formatPlanUsage(opt);
     }
 
     function renderTable() {
@@ -2412,15 +2458,7 @@
     function recalcSEO() { renderSEO(); showToast('Checks refreshed from current product data.', 'ok') }
 
     // API KEYS PAGE
-    function renderAPIKeys() {
-      const shop = getShopFromUrl();
-      document.getElementById('keyDisplay').textContent = apiReady ? 'Internal only' : 'Missing on server';
-      document.getElementById('apiStatus').textContent = apiReady ? 'Connected' : 'Not connected';
-      document.getElementById('apiStatus').className = apiReady ? 'badge bok' : 'badge bdf';
-      document.getElementById('apiBanner').style.display = apiReady ? 'none' : 'flex';
-      const shopDisplay = document.getElementById('shopifyStoreDisplay');
-      if (shopDisplay) shopDisplay.textContent = shop || 'Not connected';
-    }
+    function renderAPIKeys() { return apiReady; }
     function editKey() {
       alert('Set OPENAI_API_KEY in your server environment, restart the app, then click "Test connection".');
     }
@@ -2437,6 +2475,20 @@
       } catch (e) { showToast('Network error: ' + e.message, 'err') }
     }
     function saveShopify() { showToast('Shopify credentials are managed internally now.', 'def') }
+
+    function renderAPIKeys() { return apiReady; }
+    async function clearKey() { apiReady = false; renderAPIKeys(); showToast('Refreshing server status...', 'def'); await testAPIKey(); }
+    async function testAPIKey() {
+      showToast('Testing connection...', 'def');
+      try {
+        const r = await fetch('/api/config');
+        const data = await r.json();
+        apiReady = Boolean(data.openaiConfigured);
+        renderAPIKeys();
+        if (apiReady) showToast('Server-side OpenAI connection is ready.', 'ok');
+        else showToast('OPENAI_API_KEY is missing on the server.', 'err');
+      } catch (e) { showToast('Network error: ' + e.message, 'err') }
+    }
 
     function closeMo(id) { document.getElementById(id).classList.remove('open') }
     function openReconnectModal(shop) {
@@ -2520,9 +2572,9 @@
       }
     }
 
+    updatePlanUI();
     testAPIKey();
     loadShopifyProducts();
-
     updateStats();
     renderTable();
   </script>
