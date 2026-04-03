@@ -969,7 +969,8 @@
 
     #shopifyStore,
     #shopifyToken,
-    button[onclick="saveShopify()"] {
+    button[onclick="saveShopify()"],
+    #page-apikeys {
       display: none !important
     }
 
@@ -1357,7 +1358,6 @@
       <div class="ni" onclick="goto('seo')">📈 SEO Score</div>
       <div class="nsep"></div>
       <div class="nsec">Settings</div>
-      <div class="ni" onclick="goto('apikeys')">🔑 API Keys</div>
       <div class="ni" onclick="goto('prefs')">⚙️ Preferences</div>
       <div class="ni" onclick="goto('billing')">📦 Billing</div>
       <div class="nsp"></div>
@@ -1885,7 +1885,6 @@
     function requireAiReady() {
       if (apiReady) return true;
       showToast('Set OPENAI_API_KEY on the server, then test the connection here.', 'err');
-      goto('apikeys');
       return false;
     }
     function getShopFromUrl() {
