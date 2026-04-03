@@ -1470,7 +1470,7 @@
       <div class="nsep"></div>
       <div class="nsec">Settings</div>
       <div class="ni" onclick="goto('prefs')">⚙️ Preferences</div>
-      <div class="ni active" onclick="goto('billing')">📦 Billing</div>
+      <div class="ni" onclick="goto('billing')">📦 Billing</div>
       <div class="nsp"></div>
       <div class="usage">
         <div class="urow"><span class="utitle">Monthly usage</span><span class="uct" id="uct">0 / 50</span></div>
@@ -1695,7 +1695,7 @@
     </div>
 
     <!-- PAGE: BILLING -->
-    <div class="page active" id="page-billing">
+    <div class="page" id="page-billing">
       <div class="ph">
         <div>
           <div class="ptitle">Billing &amp; Plans</div>
@@ -1772,7 +1772,7 @@
     </div>
 
     <!-- PAGE: PREFERENCES -->
-    <div class="page" id="page-prefs">
+    <div class="page" id="page-prefs-legacy">
       <div class="ph">
         <div>
           <div class="ptitle">Preferences</div>
@@ -1933,7 +1933,7 @@
     </div>
 
     <!-- PAGE: BILLING LEGACY -->
-    <div class="page" id="page-billing-legacy">
+    <div class="page" id="page-billing-legacy" style="display:none!important">
       <div class="ph">
         <div>
           <div class="ptitle">Billing &amp; Plans</div>
@@ -1947,8 +1947,8 @@
           <div class="plan-price">$0 <span>/month</span></div>
           <div class="plan-note">A simple starting point for testing the app on your store.</div>
           <div class="plan-trial">Start instantly with no trial needed</div>
-          <span class="badge bok" id="freePlanBadge">Current plan</span>
-          <button class="btn bs" id="freePlanBtn" style="width:100%;margin-top:16px"
+          <span class="badge bok" id="freePlanBadgeLegacy">Current plan</span>
+          <button class="btn bs" id="freePlanBtnLegacy" style="width:100%;margin-top:16px"
             onclick="selectPlan('free')">Select Free plan</button>
           <ul class="plan-features">
             <li>50 title optimizations each month</li>
@@ -1963,7 +1963,7 @@
           <div class="plan-price">$9.99 <span>/month</span></div>
           <div class="plan-note">A practical plan for merchants who optimize products every week.</div>
           <div class="plan-trial">Includes a 7-day free trial</div>
-          <button class="btn bm" id="proPlanBtn" style="width:100%;margin-top:16px"
+          <button class="btn bm" id="proPlanBtnLegacy" style="width:100%;margin-top:16px"
             onclick="selectPlan('pro')">Select Pro plan</button>
           <ul class="plan-features">
             <li>1000 title optimizations every month</li>
@@ -1978,7 +1978,7 @@
           <div class="plan-price">$29.99 <span>/month</span></div>
           <div class="plan-note">Made for larger catalogs that need more automation every day.</div>
           <div class="plan-trial">Includes a 7-day free trial</div>
-          <button class="btn bp" id="enterprisePlanBtn" style="width:100%;margin-top:16px"
+          <button class="btn bp" id="enterprisePlanBtnLegacy" style="width:100%;margin-top:16px"
             onclick="selectPlan('enterprise')">Select Enterprise plan</button>
           <ul class="plan-features">
             <li>Unlimited title optimizations per month</li>
@@ -2029,7 +2029,7 @@
           <div class="sgr">
             <div>
               <div class="sgl">Title optimizations</div>
-            </div><span id="bilOpt">2 / 50</span>
+            </div><span id="bilOptLegacy">2 / 50</span>
           </div>
           <div class="sgr">
             <div>
