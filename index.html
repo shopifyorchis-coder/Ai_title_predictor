@@ -967,6 +967,12 @@
       color: var(--t2)
     }
 
+    #shopifyStore,
+    #shopifyToken,
+    button[onclick="saveShopify()"] {
+      display: none !important
+    }
+
     .sv2 {
       background: var(--mbg);
       border: 1px solid var(--magic);
@@ -1581,8 +1587,8 @@
     <div class="page" id="page-apikeys">
       <div class="ph">
         <div>
-          <div class="ptitle">API Keys</div>
-          <div class="psub">Manage your connected API keys</div>
+          <div class="ptitle">Connections</div>
+          <div class="psub">Server-managed integrations for OpenAI and Shopify</div>
         </div>
       </div>
       <div class="sgrp">
@@ -1597,8 +1603,7 @@
               <div class="sgh2">Your sk-proj-… key from platform.openai.com</div>
             </div>
             <div style="display:flex;gap:8px;align-items:center">
-              <div class="kd" id="keyDisplay">Server managed</div>
-              <button class="btn bs" onclick="editKey()" style="font-size:12px;padding:5px 10px">How to enable</button>
+              <div class="kd" id="keyDisplay">Internal only</div>
             </div>
           </div>
           <div class="sgr">
@@ -1632,20 +1637,19 @@
         <div class="sgb">
           <div class="sgr">
             <div>
-              <div class="sgl">Store URL</div>
-              <div class="sgh2">Your myshopify.com domain</div>
+              <div class="sgl">Connected store</div>
+              <div class="sgh2">Detected from the embedded Shopify app context</div>
             </div>
-            <input class="ti" id="shopifyStore" placeholder="yourstore.myshopify.com" style="max-width:280px"
-              oninput="document.getElementById('storeName').textContent=this.value||'demo-store.myshopify.com'" />
+            <div class="kd" id="shopifyStoreDisplay">Not connected</div>
           </div>
           <div class="sgr">
             <div>
-              <div class="sgl">Access Token</div>
-              <div class="sgh2">Admin API access token from your Shopify app</div>
+              <div class="sgl">Access token</div>
+              <div class="sgh2">Managed internally after Shopify authentication</div>
             </div>
             <input class="ti" type="password" id="shopifyToken" placeholder="shpat_…" style="max-width:280px" />
           </div>
-          <div style="margin-top:16px"><button class="btn bp" onclick="saveShopify()">Save Shopify settings</button>
+          <div style="margin-top:16px"><button class="btn bp" onclick="reconnectStore()">Reconnect Shopify</button>
           </div>
         </div>
       </div>
@@ -2263,10 +2267,13 @@
 
     // API KEYS PAGE
     function renderAPIKeys() {
-      document.getElementById('keyDisplay').textContent = apiReady ? 'Configured on server' : 'Missing on server';
+      const shop = getShopFromUrl();
+      document.getElementById('keyDisplay').textContent = apiReady ? 'Internal only' : 'Missing on server';
       document.getElementById('apiStatus').textContent = apiReady ? 'Connected' : 'Not connected';
       document.getElementById('apiStatus').className = apiReady ? 'badge bok' : 'badge bdf';
       document.getElementById('apiBanner').style.display = apiReady ? 'none' : 'flex';
+      const shopDisplay = document.getElementById('shopifyStoreDisplay');
+      if (shopDisplay) shopDisplay.textContent = shop || 'Not connected';
     }
     function editKey() {
       alert('Set OPENAI_API_KEY in your server environment, restart the app, then click "Test connection".');
@@ -2283,7 +2290,7 @@
         else { showToast('OPENAI_API_KEY is missing on the server.', 'err'); document.getElementById('apiStatus').textContent = 'Missing'; document.getElementById('apiStatus').className = 'badge bwa' }
       } catch (e) { showToast('Network error: ' + e.message, 'err') }
     }
-    function saveShopify() { const s = document.getElementById('shopifyStore').value.trim(); if (s) document.getElementById('storeName').textContent = s; showToast('Shopify settings saved!', 'ok') }
+    function saveShopify() { showToast('Shopify credentials are managed internally now.', 'def') }
 
     function closeMo(id) { document.getElementById(id).classList.remove('open') }
     function openReconnectModal(shop) {
