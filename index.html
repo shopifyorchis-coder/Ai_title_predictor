@@ -1830,6 +1830,29 @@
     </div>
   </div>
 
+  <!-- RECONNECT MODAL -->
+  <div class="mo" id="reconnectModal">
+    <div class="modal" style="max-width:560px">
+      <div class="mh">
+        <div class="mht">Reconnect Shopify Store</div><button class="mc" onclick="closeMo('reconnectModal')">×</button>
+      </div>
+      <div class="mb">
+        <div style="text-align:center;padding:8px 8px 0">
+          <div style="font-size:42px;margin-bottom:12px">🔐</div>
+          <div style="font-size:18px;font-weight:600;margin-bottom:8px">Your Shopify session expired</div>
+          <div style="font-size:14px;color:var(--t2);max-width:420px;margin:0 auto 16px">
+            Reconnect your store to reload products and continue optimizing titles with the latest Shopify data.
+          </div>
+          <div class="sv2" id="reconnectShopLabel">Store: not detected</div>
+        </div>
+      </div>
+      <div class="mf">
+        <button class="btn bs" onclick="closeMo('reconnectModal')">Later</button>
+        <button class="btn bm" id="reconnectBtn" onclick="reconnectStore()">Reconnect store</button>
+      </div>
+    </div>
+  </div>
+
   <div class="tws" id="tws"></div>
 
   <script>
@@ -2241,6 +2264,20 @@
     function saveShopify() { const s = document.getElementById('shopifyStore').value.trim(); if (s) document.getElementById('storeName').textContent = s; showToast('Shopify settings saved!', 'ok') }
 
     function closeMo(id) { document.getElementById(id).classList.remove('open') }
+    function openReconnectModal(shop) {
+      const normalizedShop = (shop || getShopFromUrl() || '').trim().toLowerCase();
+      document.getElementById('reconnectShopLabel').textContent = normalizedShop ? 'Store: ' + normalizedShop : 'Store: not detected';
+      document.getElementById('reconnectBtn').disabled = !normalizedShop;
+      document.getElementById('reconnectModal').classList.add('open');
+    }
+    function reconnectStore() {
+      const shop = getShopFromUrl();
+      if (!shop) {
+        showToast('Shop domain not found in the app URL.', 'err');
+        return;
+      }
+      window.location.href = '/auth?shop=' + encodeURIComponent(shop);
+    }
     function showToast(msg, type = 'def') {
       const w = document.getElementById('tws'), t = document.createElement('div');
       t.className = 'toast t' + type; t.innerHTML = '<span>' + (type === 'ok' ? '✓' : type === 'err' ? '✕' : 'ℹ') + '</span><span>' + msg + '</span>';
@@ -2248,6 +2285,7 @@
     }
     document.getElementById('optModal').addEventListener('click', function (e) { if (e.target === this) closeMo('optModal') });
     document.getElementById('tagModal').addEventListener('click', function (e) { if (e.target === this) closeMo('tagModal') });
+    document.getElementById('reconnectModal').addEventListener('click', function (e) { if (e.target === this) closeMo('reconnectModal') });
 
     // Load real Shopify products if available
     async function loadShopifyProducts() {
@@ -2294,6 +2332,7 @@
         filtered = [];
         console.log('Shopify products load failed:', err.message);
         showToast('Could not load Shopify products: ' + err.message, 'err');
+        if ((err.message || '').toLowerCase() === 'not authenticated') openReconnectModal(shop);
       } finally {
         productsLoading = false;
         updateStats();
