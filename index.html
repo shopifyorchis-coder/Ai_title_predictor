@@ -1360,12 +1360,11 @@
     <div class="page active" id="page-title">
       <div class="banner bwarn" id="apiBanner">
         <div style="flex:1;min-width:200px">
-          <div class="btitle">OpenAI API key required</div>
-          <div class="bsub">Enter your key to enable AI — stored in session only.</div>
+          <div class="btitle">Server-side AI setup required</div>
+          <div class="bsub">Configure `OPENAI_API_KEY` on the server to enable AI generation securely.</div>
         </div>
         <div style="display:flex;gap:8px;align-items:center;flex-shrink:0;flex-wrap:wrap">
-          <input class="binput" type="password" id="apiKeyInput" placeholder="sk-proj-…" />
-          <button class="btn bs" onclick="saveApiKey()" style="padding:6px 12px;font-size:13px">Save key</button>
+          <button class="btn bs" onclick="saveApiKey()" style="padding:6px 12px;font-size:13px">Check setup</button>
         </div>
         <button class="bcls" onclick="this.closest('.banner').style.display='none'">×</button>
       </div>
@@ -1591,8 +1590,8 @@
               <div class="sgh2">Your sk-proj-… key from platform.openai.com</div>
             </div>
             <div style="display:flex;gap:8px;align-items:center">
-              <div class="kd" id="keyDisplay">Not set</div>
-              <button class="btn bs" onclick="editKey()" style="font-size:12px;padding:5px 10px">Edit</button>
+              <div class="kd" id="keyDisplay">Server managed</div>
+              <button class="btn bs" onclick="editKey()" style="font-size:12px;padding:5px 10px">How to enable</button>
             </div>
           </div>
           <div class="sgr">
@@ -1614,7 +1613,7 @@
           </div>
           <div style="margin-top:16px;display:flex;gap:8px">
             <button class="btn bm" onclick="testAPIKey()">Test connection</button>
-            <button class="btn bs" onclick="clearKey()">Clear key</button>
+            <button class="btn bs" onclick="clearKey()">Refresh status</button>
           </div>
         </div>
       </div>
@@ -1845,10 +1844,24 @@
       { id: 8, name: "FlexiDesk", title: "Standing Desk Converter Adjustable Height Sit Stand Workstation Large", sku: "DS-884", emoji: "🖥️", status: "draft", collection: "Home", optimized: false, tags: ["desk", "standing", "ergonomic"], metaTitle: "", metaDesc: "", seoScore: 44 },
     ];
 
-    let sel = new Set(), apiKey = '', genRes = {}, filtered = [...PRODUCTS], stF = '', colF = '', curPg = 1;
+    let sel = new Set(), apiReady = false, genRes = {}, filtered = [...PRODUCTS], stF = '', colF = '', curPg = 1;
     let curTagProd = null, genTags = [];
 
     function cc(n) { return n <= 60 ? 'cok' : n <= 70 ? 'cwn' : 'cbd' }
+    function escapeHtml(value) {
+      return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+    function requireAiReady() {
+      if (apiReady) return true;
+      showToast('Set OPENAI_API_KEY on the server, then test the connection here.', 'err');
+      goto('apikeys');
+      return false;
+    }
 
     function goto(page) {
       document.querySelectorAll('.ni').forEach(n => n.classList.remove('active'));
@@ -1889,8 +1902,8 @@
         const tr = document.createElement('tr');
         if (sel.has(p.id)) tr.classList.add('sel-r');
         tr.innerHTML = `<td><input type="checkbox" ${sel.has(p.id) ? 'checked' : ''} onchange="togSel(${p.id},this.checked)"/></td>
-      <td><div class="pc"><div class="pt2">${p.emoji}</div><div><div class="pn">${p.name}</div><div class="psk">${p.sku}</div></div></div></td>
-      <td class="tc">${p.title}</td>
+      <td><div class="pc"><div class="pt2">${escapeHtml(p.emoji)}</div><div><div class="pn">${escapeHtml(p.name)}</div><div class="psk">${escapeHtml(p.sku)}</div></div></div></td>
+      <td class="tc">${escapeHtml(p.title)}</td>
       <td><span class="ct ${cc(n)}">${n}</span></td>
       <td>${badge}</td>
       <td><button class="rb" onclick="openSingle(${p.id})">Optimize</button></td>`;
@@ -1920,11 +1933,7 @@
     function chPg(d) { const max = Math.ceil(filtered.length / 8); curPg = Math.max(1, Math.min(max, curPg + d)); renderTable() }
     function goP(n) { curPg = n; renderTable() }
 
-    function saveApiKey() {
-      apiKey = document.getElementById('apiKeyInput').value.trim();
-      if (apiKey) { document.getElementById('apiBanner').style.display = 'none'; showToast('API key saved — ready to optimize!', 'ok'); renderAPIKeys() }
-      else showToast('Please enter a valid key', 'err');
-    }
+    async function saveApiKey() { await testAPIKey() }
 
     function openOptModal() { if (!sel.size) return; showOptModal(PRODUCTS.filter(p => sel.has(p.id))) }
     function openSingle(id) { showOptModal([PRODUCTS.find(x => x.id === id)]) }
@@ -1936,43 +1945,42 @@
       document.getElementById('applyAllBtn').style.display = 'none';
       document.getElementById('regenBtn').style.display = 'none';
       document.getElementById('optModal').classList.add('open');
-      if (!apiKey) {
+      if (!apiReady) {
         body.innerHTML = `<div style="text-align:center;padding:40px 16px">
       <div style="font-size:40px;margin-bottom:16px">🔑</div>
-      <div style="font-size:16px;font-weight:600;margin-bottom:8px">OpenAI API key required</div>
-      <div style="font-size:14px;color:var(--t2);margin-bottom:20px">Enter your key to enable GPT-4o optimization.</div>
-      <div style="display:flex;gap:8px;max-width:420px;margin:0 auto">
-        <input class="ti" type="password" id="mKey" placeholder="sk-proj-…" style="font-family:monospace;font-size:13px"/>
-        <button class="btn bm" onclick="saveKeyModal()">Save &amp; optimize</button>
+      <div style="font-size:16px;font-weight:600;margin-bottom:8px">Server-side OpenAI key required</div>
+      <div style="font-size:14px;color:var(--t2);margin-bottom:20px">Set <code>OPENAI_API_KEY</code> on the server, then test the connection from Settings.</div>
+      <div style="display:flex;gap:8px;max-width:420px;margin:0 auto;justify-content:center">
+        <button class="btn bm" onclick="testAPIKey()">Test connection</button>
       </div></div>`;
         return;
       }
-      products.forEach(p => { const c = document.createElement('div'); c.className = 'lc'; c.id = 'card-' + p.id; c.innerHTML = '<div class="spin"></div><div class="lt">Optimizing <strong>' + p.name + '</strong>…</div>'; body.appendChild(c) });
+      products.forEach(p => { const c = document.createElement('div'); c.className = 'lc'; c.id = 'card-' + p.id; c.innerHTML = '<div class="spin"></div><div class="lt">Optimizing <strong>' + escapeHtml(p.name) + '</strong>…</div>'; body.appendChild(c) });
       let done = 0;
       products.forEach(p => genTitle(p).then(r => { genRes[p.id] = r; renderRC(p, r); done++; if (done === products.length) { document.getElementById('applyAllBtn').style.display = 'inline-flex'; document.getElementById('regenBtn').style.display = 'inline-flex' } }));
     }
 
-    function saveKeyModal() { apiKey = (document.getElementById('mKey') || {}).value?.trim() || ''; if (!apiKey) return; document.getElementById('apiBanner').style.display = 'none'; closeMo('optModal'); setTimeout(openOptModal, 80) }
+    async function saveKeyModal() { await testAPIKey(); closeMo('optModal'); setTimeout(openOptModal, 80) }
 
     async function genTitle(p) {
-      const prompt = 'You are a Shopify SEO expert. Rewrite this product title: compelling, SEO-optimized, under 70 chars. Also suggest meta title (under 60 chars) and meta description (under 160 chars).\nOriginal: "' + p.title + '" SKU: ' + p.sku + '\nRespond ONLY in JSON: {"optimized_title":"...","meta_title":"...","meta_description":"...","keywords":["k1","k2","k3"]}';
+      if (!requireAiReady()) return { optimized_title: '', meta_title: '', meta_description: '', keywords: [], error: true };
       try {
-        const r = await fetch('https://api.openai.com/v1/chat/completions', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + apiKey }, body: JSON.stringify({ model: (document.getElementById('modelSel') || { value: 'gpt-4o' }).value, max_tokens: 512, messages: [{ role: 'user', content: prompt }], response_format: { type: 'json_object' } }) });
-        const d = await r.json(); if (d.error) throw new Error(d.error.message);
-        return JSON.parse(d.choices[0].message.content);
-      } catch (e) { showToast('API error: ' + e.message, 'err'); return { optimized_title: 'Error — check API key', meta_title: '', meta_description: '', keywords: [], error: true } }
+        const r = await fetch('/api/optimize-title', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: p.title, sku: p.sku }) });
+        const d = await r.json(); if (!r.ok) throw new Error(d.error || 'Optimization failed');
+        return d;
+      } catch (e) { showToast('API error: ' + e.message, 'err'); return { optimized_title: 'Error - check server setup', meta_title: '', meta_description: '', keywords: [], error: true } }
     }
 
     function renderRC(p, r) {
       const card = document.getElementById('card-' + p.id);
       const oc = p.title.length, nc = (r.optimized_title || '').length;
       card.className = 'rc';
-      card.innerHTML = '<div class="rh"><div class="rp"><span>' + p.emoji + '</span><span>' + p.name + '</span><span class="rsk">' + p.sku + '</span></div><span class="ct ' + cc(nc) + '">' + nc + ' chars</span></div>' +
-        '<div class="rbody"><div class="cg"><div class="cb co"><div class="clb">Original</div><div class="ctx">' + p.title + '</div><div class="cch">' + oc + ' chars</div></div>' +
-        '<div class="cb ca"><div class="clb">GPT-4o suggestion</div><div class="ctx">' + (r.optimized_title || '—') + '</div><div class="cch">' + nc + ' chars</div></div></div>' +
-        '<div class="fg"><div class="fl">Edit before applying</div><input class="ti" type="text" id="edit-' + p.id + '" value="' + (r.optimized_title || '').replace(/"/g, '&quot;') + '" maxlength="70"/><div class="fh" id="cnt-' + p.id + '">' + nc + '/70 characters</div></div>' +
-        (r.meta_title ? '<div class="fg"><div class="fl">Meta title</div><div class="sv2">' + r.meta_title + '</div></div><div class="fg"><div class="fl">Meta description</div><div class="sv2">' + r.meta_description + '</div></div>' : '') +
-        (r.keywords && r.keywords.length ? '<div class="fg"><div class="fl">Keywords</div><div>' + r.keywords.map(k => '<span class="kt">' + k + '</span>').join('') + '</div></div>' : '') +
+      card.innerHTML = '<div class="rh"><div class="rp"><span>' + escapeHtml(p.emoji) + '</span><span>' + escapeHtml(p.name) + '</span><span class="rsk">' + escapeHtml(p.sku) + '</span></div><span class="ct ' + cc(nc) + '">' + nc + ' chars</span></div>' +
+        '<div class="rbody"><div class="cg"><div class="cb co"><div class="clb">Original</div><div class="ctx">' + escapeHtml(p.title) + '</div><div class="cch">' + oc + ' chars</div></div>' +
+        '<div class="cb ca"><div class="clb">GPT-4o suggestion</div><div class="ctx">' + escapeHtml(r.optimized_title || '—') + '</div><div class="cch">' + nc + ' chars</div></div></div>' +
+        '<div class="fg"><div class="fl">Edit before applying</div><input class="ti" type="text" id="edit-' + p.id + '" value="' + escapeHtml(r.optimized_title || '') + '" maxlength="70"/><div class="fh" id="cnt-' + p.id + '">' + nc + '/70 characters</div></div>' +
+        (r.meta_title ? '<div class="fg"><div class="fl">Meta title</div><div class="sv2">' + escapeHtml(r.meta_title) + '</div></div><div class="fg"><div class="fl">Meta description</div><div class="sv2">' + escapeHtml(r.meta_description) + '</div></div>' : '') +
+        (r.keywords && r.keywords.length ? '<div class="fg"><div class="fl">Keywords</div><div>' + r.keywords.map(k => '<span class="kt">' + escapeHtml(k) + '</span>').join('') + '</div></div>' : '') +
         '<div class="ar"><div class="ah">Updates product title via Shopify Admin API</div><button class="btn bp" id="apply-' + p.id + '" onclick="applySingle(' + p.id + ')">✓ Apply to Shopify</button></div></div>';
       const inp = document.getElementById('edit-' + p.id), cnt = document.getElementById('cnt-' + p.id);
       inp.addEventListener('input', () => { const n = inp.value.length; cnt.textContent = n + '/70 characters'; cnt.style.color = n > 70 ? 'var(--bad)' : n > 60 ? 'var(--wt)' : 'var(--t2)'; genRes[p.id]._edited = inp.value });
@@ -1988,8 +1996,7 @@
   const shop = urlParams.get('shop');
 
   if (shop) {
-    // Save to real Shopify store
-    fetch('/api/products/' + id, {
+    return fetch('/api/products/' + id, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ title })
@@ -2002,29 +2009,55 @@
         btn.textContent = '✓ Applied!';
         showToast('"' + title + '" saved to Shopify!', 'ok');
         updateStats(); renderTable();
+        return { success: true, id };
       } else {
         btn.disabled = false; btn.textContent = '✓ Apply to Shopify';
         showToast('Error: ' + data.error, 'err');
+        return Promise.reject(new Error(data.error || 'Apply failed'));
       }
     })
-    .catch(e => { btn.disabled = false; btn.textContent = '✓ Apply to Shopify'; showToast('Error: ' + e.message, 'err'); });
+    .catch(e => { btn.disabled = false; btn.textContent = '✓ Apply to Shopify'; showToast('Error: ' + e.message, 'err'); throw e; });
   } else {
-    // Demo mode
-    setTimeout(() => {
+    return new Promise((resolve) => {
+      setTimeout(() => {
       const p = PRODUCTS.find(x => x.id == id);
       if (p) { p.title = title; p.optimized = true; }
       btn.textContent = '✓ Applied!';
       showToast('"' + title + '" applied!', 'ok');
       updateStats(); renderTable();
+      resolve({ success: true, id });
     }, 1100);
+    });
   }
 }
-    function applyAll() { const btn = document.getElementById('applyAllBtn'); btn.disabled = true; btn.textContent = 'Applying all…'; document.querySelectorAll('[id^="apply-"]').forEach(b => { if (!b.disabled) b.click() }); setTimeout(() => { closeMo('optModal'); showToast('All titles applied!', 'ok') }, 1800) }
+    async function applyAll() {
+      const btn = document.getElementById('applyAllBtn');
+      const ids = Object.keys(genRes).map(Number).filter(id => {
+        const applyBtn = document.getElementById('apply-' + id);
+        return applyBtn && !applyBtn.disabled;
+      });
+      if (!ids.length) return;
+
+      btn.disabled = true;
+      btn.textContent = 'Applying all…';
+      const results = await Promise.allSettled(ids.map(id => applySingle(id)));
+      const successCount = results.filter(r => r.status === 'fulfilled').length;
+      const failureCount = results.length - successCount;
+
+      btn.disabled = false;
+      btn.textContent = '✓ Apply all to Shopify';
+      if (failureCount === 0) {
+        closeMo('optModal');
+        showToast(`All ${successCount} titles applied!`, 'ok');
+      } else {
+        showToast(`${successCount} titles applied, ${failureCount} failed.`, 'err');
+      }
+    }
     function regenAll() {
       const products = PRODUCTS.filter(p => genRes[p.id] !== undefined); genRes = {};
       document.getElementById('applyAllBtn').style.display = 'none'; document.getElementById('regenBtn').style.display = 'none';
       const body = document.getElementById('mBody'); body.innerHTML = '';
-      products.forEach(p => { const c = document.createElement('div'); c.className = 'lc'; c.id = 'card-' + p.id; c.innerHTML = '<div class="spin"></div><div class="lt">Regenerating for <strong>' + p.name + '</strong>…</div>'; body.appendChild(c) });
+      products.forEach(p => { const c = document.createElement('div'); c.className = 'lc'; c.id = 'card-' + p.id; c.innerHTML = '<div class="spin"></div><div class="lt">Regenerating for <strong>' + escapeHtml(p.name) + '</strong>…</div>'; body.appendChild(c) });
       let done = 0; products.forEach(p => genTitle(p).then(r => { genRes[p.id] = r; renderRC(p, r); done++; if (done === products.length) { document.getElementById('applyAllBtn').style.display = 'inline-flex'; document.getElementById('regenBtn').style.display = 'inline-flex' } }));
     }
 
@@ -2038,21 +2071,21 @@
         const d = document.createElement('div');
         d.style.cssText = 'background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);margin-bottom:12px;overflow:hidden';
         d.innerHTML = '<div style="background:var(--s2);padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">' +
-          '<div class="rp"><span>' + p.emoji + '</span><span>' + p.name + '</span><span class="rsk">' + p.sku + '</span></div>' +
+          '<div class="rp"><span>' + escapeHtml(p.emoji) + '</span><span>' + escapeHtml(p.name) + '</span><span class="rsk">' + escapeHtml(p.sku) + '</span></div>' +
           '<button class="btn bm" style="font-size:12px;padding:5px 10px" onclick="aiMeta(' + p.id + ')">✦ AI Generate</button></div>' +
           '<div style="padding:16px;display:grid;grid-template-columns:1fr 1fr;gap:12px">' +
           '<div class="fg"><div class="fl">Meta title <span style="font-weight:400;color:var(--t3)" id="mtc-' + p.id + '">' + (p.metaTitle || '').length + '/60</span></div>' +
-          '<input class="ti" id="mt-' + p.id + '" value="' + (p.metaTitle || '') + '" placeholder="SEO title (under 60 chars)" maxlength="60" oninput="document.getElementById(\'mtc-' + p.id + '\').textContent=this.value.length+\'/60\';PRODUCTS.find(x=>x.id===' + p.id + ').metaTitle=this.value"/></div>' +
+          '<input class="ti" id="mt-' + p.id + '" value="' + escapeHtml(p.metaTitle || '') + '" placeholder="SEO title (under 60 chars)" maxlength="60" oninput="document.getElementById(\'mtc-' + p.id + '\').textContent=this.value.length+\'/60\';PRODUCTS.find(x=>x.id===' + p.id + ').metaTitle=this.value"/></div>' +
           '<div class="fg"><div class="fl">Meta description <span style="font-weight:400;color:var(--t3)" id="mdc-' + p.id + '">' + (p.metaDesc || '').length + '/160</span></div>' +
-          '<input class="ti" id="md-' + p.id + '" value="' + (p.metaDesc || '') + '" placeholder="Meta description (under 160 chars)" maxlength="160" oninput="document.getElementById(\'mdc-' + p.id + '\').textContent=this.value.length+\'/160\';PRODUCTS.find(x=>x.id===' + p.id + ').metaDesc=this.value"/></div></div>' +
-          '<div style="padding:0 16px 12px;font-size:12px;color:var(--t2)">Current title: ' + p.title + '</div>';
+          '<input class="ti" id="md-' + p.id + '" value="' + escapeHtml(p.metaDesc || '') + '" placeholder="Meta description (under 160 chars)" maxlength="160" oninput="document.getElementById(\'mdc-' + p.id + '\').textContent=this.value.length+\'/160\';PRODUCTS.find(x=>x.id===' + p.id + ').metaDesc=this.value"/></div></div>' +
+          '<div style="padding:0 16px 12px;font-size:12px;color:var(--t2)">Current title: ' + escapeHtml(p.title) + '</div>';
         list.appendChild(d);
       });
     }
     function filterMeta(q) { renderMeta(q) }
     function filterMetaSt(v) { metaStF = v; renderMeta() }
     async function aiMeta(id) {
-      if (!apiKey) { showToast('Enter your OpenAI API key first', 'err'); goto('apikeys'); return }
+      if (!requireAiReady()) return;
       const p = PRODUCTS.find(x => x.id === id); showToast('Generating meta for ' + p.name + '…', 'def');
       const r = await genTitle(p);
       if (!r.error) {
@@ -2071,7 +2104,7 @@
         const d = document.createElement('div');
         d.style.cssText = 'background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);margin-bottom:12px;overflow:hidden';
         d.innerHTML = '<div style="background:var(--s2);padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">' +
-          '<div class="rp"><span>' + p.emoji + '</span><span>' + p.name + '</span><span class="rsk">' + p.sku + '</span><span style="font-size:11px;color:var(--t2)">' + p.tags.length + ' tags</span></div>' +
+          '<div class="rp"><span>' + escapeHtml(p.emoji) + '</span><span>' + escapeHtml(p.name) + '</span><span class="rsk">' + escapeHtml(p.sku) + '</span><span style="font-size:11px;color:var(--t2)">' + p.tags.length + ' tags</span></div>' +
           '<button class="btn bm" style="font-size:12px;padding:5px 10px" onclick="suggestTags(' + p.id + ')">✦ Suggest tags</button></div>' +
           '<div style="padding:14px 16px;display:flex;align-items:center;gap:6px;flex-wrap:wrap" id="tags-' + p.id + '"></div>';
         list.appendChild(d);
@@ -2081,28 +2114,27 @@
     function renderTagsFor(id) {
       const p = PRODUCTS.find(x => x.id === id);
       const el = document.getElementById('tags-' + id); if (!el) return;
-      el.innerHTML = p.tags.map(t => '<span class="kt" style="cursor:pointer" onclick="removeTag(' + id + ',\'' + t + '\')">' + t + ' ×</span>').join('') +
+      el.innerHTML = p.tags.map(t => '<span class="kt" style="cursor:pointer" onclick=\'removeTag(' + id + ',' + JSON.stringify(t) + ')\'>' + escapeHtml(t) + ' ×</span>').join('') +
         '<input style="border:1px dashed var(--border2);border-radius:var(--rf);padding:2px 10px;font-size:12px;font-family:inherit;outline:none;background:transparent;color:var(--text);min-width:80px" placeholder="+ Add tag" onkeydown="if(event.key===\'Enter\'&&this.value.trim()){addTag(' + id + ',this.value.trim());this.value=\'\'}"/>';
     }
     function removeTag(id, tag) { const p = PRODUCTS.find(x => x.id === id); p.tags = p.tags.filter(t => t !== tag); renderTagsFor(id) }
     function addTag(id, tag) { const p = PRODUCTS.find(x => x.id === id); if (tag && !p.tags.includes(tag)) p.tags.push(tag); renderTagsFor(id) }
 
     async function suggestTags(id) {
-      if (!apiKey) { showToast('Enter your OpenAI API key first', 'err'); goto('apikeys'); return }
+      if (!requireAiReady()) return;
       const p = PRODUCTS.find(x => x.id === id); curTagProd = p;
       showToast('Generating tags for ' + p.name + '…', 'def');
-      const prompt = 'Generate 10 highly relevant Shopify product tags for: "' + p.title + '". Tags should be specific searchable keywords.\nRespond ONLY in JSON: {"tags":["tag1","tag2",...]}';
       try {
-        const r = await fetch('https://api.openai.com/v1/chat/completions', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + apiKey }, body: JSON.stringify({ model: 'gpt-4o', max_tokens: 256, messages: [{ role: 'user', content: prompt }], response_format: { type: 'json_object' } }) });
-        const d = await r.json(); if (d.error) throw new Error(d.error.message);
-        const res = JSON.parse(d.choices[0].message.content); genTags = res.tags || [];
+        const r = await fetch('/api/suggest-tags', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: p.title, count: 10 }) });
+        const d = await r.json(); if (!r.ok) throw new Error(d.error || 'Tag suggestion failed');
+        genTags = d.tags || [];
         document.getElementById('tagMTitle').textContent = 'Tag suggestions for ' + p.name;
         const body = document.getElementById('tagMBody');
         body.innerHTML = '<div style="margin-bottom:12px;font-size:13px;color:var(--t2)">Click tags to deselect. All highlighted tags will be added.</div>' +
           '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px" id="genTagsWrap">' +
-          genTags.map((t, i) => '<span class="kt" style="cursor:pointer;border:2px solid var(--magic);background:var(--mbg);color:var(--mt)" id="gtag-' + i + '" onclick="toggleGTag(' + i + ')">' + t + '</span>').join('') + '</div>' +
+          genTags.map((t, i) => '<span class="kt" style="cursor:pointer;border:2px solid var(--magic);background:var(--mbg);color:var(--mt)" id="gtag-' + i + '" onclick="toggleGTag(' + i + ')">' + escapeHtml(t) + '</span>').join('') + '</div>' +
           '<div style="font-size:13px;color:var(--t2);margin-bottom:8px">Current tags:</div>' +
-          '<div>' + p.tags.map(t => '<span class="kt">' + t + '</span>').join('') + '</div>';
+          '<div>' + p.tags.map(t => '<span class="kt">' + escapeHtml(t) + '</span>').join('') + '</div>';
         document.getElementById('applyTagsBtn').style.display = 'inline-flex';
         document.getElementById('tagModal').classList.add('open');
       } catch (e) { showToast('API error: ' + e.message, 'err') }
@@ -2121,11 +2153,10 @@
       closeMo('tagModal'); showToast('Tags applied to ' + curTagProd.name + '!', 'ok');
     }
     async function suggestAllTags() {
-      if (!apiKey) { showToast('Enter your OpenAI API key first', 'err'); goto('apikeys'); return }
+      if (!requireAiReady()) return;
       showToast('Generating tags for all products…', 'def');
       for (const p of PRODUCTS) {
-        const prompt = 'Generate 6 Shopify product tags for: "' + p.title + '". Respond ONLY in JSON: {"tags":["tag1","tag2",...]}';
-        try { const r = await fetch('https://api.openai.com/v1/chat/completions', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + apiKey }, body: JSON.stringify({ model: 'gpt-4o', max_tokens: 128, messages: [{ role: 'user', content: prompt }], response_format: { type: 'json_object' } }) }); const d = await r.json(); if (!d.error) { const res = JSON.parse(d.choices[0].message.content); (res.tags || []).forEach(t => { if (!p.tags.includes(t)) p.tags.push(t) }) } } catch (e) { }
+        try { const r = await fetch('/api/suggest-tags', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: p.title, count: 6 }) }); const d = await r.json(); if (r.ok) { (d.tags || []).forEach(t => { if (!p.tags.includes(t)) p.tags.push(t) }) } } catch (e) { }
       }
       renderTags(); showToast('Tags updated for all products!', 'ok');
     }
@@ -2167,22 +2198,24 @@
 
     // API KEYS PAGE
     function renderAPIKeys() {
-      document.getElementById('keyDisplay').textContent = apiKey ? apiKey.substring(0, 12) + '…' : 'Not set';
-      document.getElementById('apiStatus').textContent = apiKey ? 'Connected' : 'Not connected';
-      document.getElementById('apiStatus').className = apiKey ? 'badge bok' : 'badge bdf';
+      document.getElementById('keyDisplay').textContent = apiReady ? 'Configured on server' : 'Missing on server';
+      document.getElementById('apiStatus').textContent = apiReady ? 'Connected' : 'Not connected';
+      document.getElementById('apiStatus').className = apiReady ? 'badge bok' : 'badge bdf';
+      document.getElementById('apiBanner').style.display = apiReady ? 'none' : 'flex';
     }
     function editKey() {
-      const val = prompt('Enter your OpenAI API key:', '');
-      if (val !== null && val.trim()) { apiKey = val.trim(); document.getElementById('apiKeyInput').value = apiKey; document.getElementById('apiBanner').style.display = 'none'; renderAPIKeys(); showToast('API key updated!', 'ok') }
+      alert('Set OPENAI_API_KEY in your server environment, restart the app, then click "Test connection".');
     }
-    function clearKey() { apiKey = ''; renderAPIKeys(); document.getElementById('apiKeyInput').value = ''; document.getElementById('apiBanner').style.display = 'flex'; showToast('API key cleared', 'def') }
+    async function clearKey() { apiReady = false; renderAPIKeys(); showToast('Refreshing server status…', 'def'); await testAPIKey(); }
     async function testAPIKey() {
-      if (!apiKey) { showToast('No API key set — enter one first', 'err'); return }
       showToast('Testing connection…', 'def');
       try {
-        const r = await fetch('https://api.openai.com/v1/models', { headers: { 'Authorization': 'Bearer ' + apiKey } });
-        if (r.ok) { showToast('Connection successful! ✓', 'ok'); document.getElementById('apiStatus').textContent = 'Connected'; document.getElementById('apiStatus').className = 'badge bok' }
-        else { showToast('Connection failed — check your API key', 'err'); document.getElementById('apiStatus').textContent = 'Error'; document.getElementById('apiStatus').className = 'badge bwa' }
+        const r = await fetch('/api/config');
+        const data = await r.json();
+        apiReady = Boolean(data.openaiConfigured);
+        renderAPIKeys();
+        if (apiReady) { showToast('Server-side OpenAI connection is ready.', 'ok'); }
+        else { showToast('OPENAI_API_KEY is missing on the server.', 'err'); document.getElementById('apiStatus').textContent = 'Missing'; document.getElementById('apiStatus').className = 'badge bwa' }
       } catch (e) { showToast('Network error: ' + e.message, 'err') }
     }
     function saveShopify() { const s = document.getElementById('shopifyStore').value.trim(); if (s) document.getElementById('storeName').textContent = s; showToast('Shopify settings saved!', 'ok') }
@@ -2238,6 +2271,7 @@
       }
     }
 
+    testAPIKey();
     loadShopifyProducts();
 
     updateStats();

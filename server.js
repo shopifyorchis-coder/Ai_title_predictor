@@ -1,24 +1,5 @@
-// const express = require('express');
-// const path = require('path');
-// const app = express();
-// require('dotenv').config();
-
-// app.use(express.static(__dirname));
-
-// app.get('/', (req, res) => {
-//   res.sendFile(path.join(__dirname, 'index.html'));
-// });
-
-// const PORT = process.env.PORT || 3000;
-// app.listen(PORT, () => {
-//   console.log(`TitleBoost running at http://localhost:${PORT}`);
-//   console.log(`Shopify API Key loaded: ${process.env.SHOPIFY_API_KEY ? '✅ Yes' : '❌ Missing'}`);
-//   console.log(`OpenAI Key loaded: ${process.env.OPENAI_API_KEY ? '✅ Yes' : '❌ Missing'}`);
-// });
-
-
-
 require('dotenv').config();
+
 const express = require('express');
 const path = require('path');
 const axios = require('axios');
@@ -27,6 +8,7 @@ const cookieParser = require('cookie-parser');
 const session = require('express-session');
 
 const app = express();
+
 app.use(express.json());
 app.use(cookieParser());
 app.use(session({
@@ -40,35 +22,108 @@ const {
   SHOPIFY_API_KEY,
   SHOPIFY_API_SECRET,
   SHOPIFY_APP_URL,
-  SHOPIFY_SCOPES
+  SHOPIFY_SCOPES,
+  OPENAI_API_KEY
 } = process.env;
 
-// ─── STEP 1: Merchant clicks install ───
+const SHOPIFY_API_VERSION = '2024-01';
+const SHOP_DOMAIN_REGEX = /^[a-z0-9][a-z0-9-]*\.myshopify\.com$/;
+
+function normalizeShop(shop) {
+  if (typeof shop !== 'string') return null;
+  const normalized = shop.trim().toLowerCase();
+  return SHOP_DOMAIN_REGEX.test(normalized) ? normalized : null;
+}
+
+function buildShopifyUrl(shop, pathname) {
+  return `https://${shop}${pathname}`;
+}
+
+function verifyShopifyHmac(query) {
+  const { hmac, signature, ...rest } = query;
+  if (!hmac || typeof hmac !== 'string') return false;
+
+  const message = Object.keys(rest)
+    .sort()
+    .map((key) => `${key}=${Array.isArray(rest[key]) ? rest[key].join(',') : rest[key]}`)
+    .join('&');
+
+  const digest = crypto
+    .createHmac('sha256', SHOPIFY_API_SECRET)
+    .update(message)
+    .digest('hex');
+
+  const provided = Buffer.from(hmac, 'utf8');
+  const expected = Buffer.from(digest, 'utf8');
+  return provided.length === expected.length && crypto.timingSafeEqual(provided, expected);
+}
+
+function getSessionAuth(req, res) {
+  const shop = normalizeShop(req.query.shop || req.session.shop);
+  const accessToken = req.session.accessToken;
+
+  if (!shop || !accessToken || shop !== req.session.shop) {
+    res.status(401).json({ error: 'Not authenticated' });
+    return null;
+  }
+
+  return { shop, accessToken };
+}
+
+async function generateJsonCompletion(prompt, maxTokens = 512) {
+  if (!OPENAI_API_KEY) {
+    const error = new Error('OpenAI API key is not configured on the server');
+    error.status = 503;
+    throw error;
+  }
+
+  const response = await axios.post(
+    'https://api.openai.com/v1/chat/completions',
+    {
+      model: 'gpt-4o',
+      max_tokens: maxTokens,
+      messages: [{ role: 'user', content: prompt }],
+      response_format: { type: 'json_object' }
+    },
+    {
+      headers: {
+        Authorization: `Bearer ${OPENAI_API_KEY}`,
+        'Content-Type': 'application/json'
+      }
+    }
+  );
+
+  return JSON.parse(response.data.choices[0].message.content);
+}
+
 app.get('/auth', (req, res) => {
-  const shop = req.query.shop;
-  if (!shop) return res.send('Missing shop parameter');
+  const shop = normalizeShop(req.query.shop);
+  if (!shop) return res.status(400).send('Invalid shop parameter');
 
   const state = crypto.randomBytes(16).toString('hex');
   req.session.state = state;
 
   const redirectUri = `${SHOPIFY_APP_URL}/auth/callback`;
-  const installUrl = `https://${shop}/admin/oauth/authorize?client_id=${SHOPIFY_API_KEY}&scope=${SHOPIFY_SCOPES}&state=${state}&redirect_uri=${redirectUri}`;
+  const installUrl = `${buildShopifyUrl(shop, '/admin/oauth/authorize')}?client_id=${encodeURIComponent(SHOPIFY_API_KEY)}&scope=${encodeURIComponent(SHOPIFY_SCOPES)}&state=${encodeURIComponent(state)}&redirect_uri=${encodeURIComponent(redirectUri)}`;
 
   res.redirect(installUrl);
 });
 
-// ─── STEP 2: Shopify redirects back with code ───
 app.get('/auth/callback', async (req, res) => {
   const { shop, code, state } = req.query;
+  const normalizedShop = normalizeShop(shop);
+
+  if (!normalizedShop || !code || !verifyShopifyHmac(req.query)) {
+    return res.status(403).send('Request origin cannot be verified');
+  }
 
   if (state !== req.session.state) {
     return res.status(403).send('Request origin cannot be verified');
   }
 
   try {
-    // Exchange code for access token
     const tokenRes = await axios.post(
-      `https://${shop}/admin/oauth/access_token`,
+      buildShopifyUrl(normalizedShop, '/admin/oauth/access_token'),
       {
         client_id: SHOPIFY_API_KEY,
         client_secret: SHOPIFY_API_SECRET,
@@ -76,33 +131,26 @@ app.get('/auth/callback', async (req, res) => {
       }
     );
 
-    const accessToken = tokenRes.data.access_token;
+    req.session.shop = normalizedShop;
+    req.session.accessToken = tokenRes.data.access_token;
+    delete req.session.state;
 
-    // Save token in session
-    req.session.shop = shop;
-    req.session.accessToken = accessToken;
-
-    console.log(`✅ Shop installed: ${shop}`);
-    res.redirect(`/?shop=${shop}`);
-
+    console.log(`Shop installed: ${normalizedShop}`);
+    res.redirect(`/?shop=${encodeURIComponent(normalizedShop)}`);
   } catch (err) {
     console.error('OAuth error:', err.message);
     res.status(500).send('OAuth failed: ' + err.message);
   }
 });
 
-// ─── STEP 3: API to fetch real products ───
 app.get('/api/products', async (req, res) => {
-  const shop = req.query.shop || req.session.shop;
-  const accessToken = req.query.token || req.session.accessToken;
-
-  if (!shop || !accessToken) {
-    return res.status(401).json({ error: 'Not authenticated' });
-  }
+  const auth = getSessionAuth(req, res);
+  if (!auth) return;
+  const { shop, accessToken } = auth;
 
   try {
     const response = await axios.get(
-      `https://${shop}/admin/api/2024-01/products.json?limit=50&fields=id,title,handle,status,variants,images`,
+      buildShopifyUrl(shop, `/admin/api/${SHOPIFY_API_VERSION}/products.json?limit=50&fields=id,title,handle,status,variants,images`),
       {
         headers: {
           'X-Shopify-Access-Token': accessToken,
@@ -111,38 +159,37 @@ app.get('/api/products', async (req, res) => {
       }
     );
 
-    const products = response.data.products.map(p => ({
-      id: p.id,
-      name: p.title.split(' ').slice(0, 2).join(' '),
-      title: p.title,
-      sku: p.variants?.[0]?.sku || 'N/A',
-      status: p.status,
-      image: p.images?.[0]?.src || null,
-      handle: p.handle
+    const products = response.data.products.map((product) => ({
+      id: product.id,
+      name: product.title.split(' ').slice(0, 2).join(' '),
+      title: product.title,
+      sku: product.variants?.[0]?.sku || 'N/A',
+      status: product.status,
+      image: product.images?.[0]?.src || null,
+      handle: product.handle
     }));
 
     res.json({ products, shop });
-
   } catch (err) {
     console.error('Products fetch error:', err.message);
     res.status(500).json({ error: err.message });
   }
 });
 
-// ─── STEP 4: API to update a product title ───
 app.put('/api/products/:id', async (req, res) => {
-  const shop = req.query.shop || req.session.shop;
-  const accessToken = req.query.token || req.session.accessToken;
-  const { title } = req.body;
+  const auth = getSessionAuth(req, res);
+  if (!auth) return;
+  const { shop, accessToken } = auth;
+  const { title } = req.body || {};
 
-  if (!shop || !accessToken) {
-    return res.status(401).json({ error: 'Not authenticated' });
+  if (typeof title !== 'string' || !title.trim()) {
+    return res.status(400).json({ error: 'Title is required' });
   }
 
   try {
     const response = await axios.put(
-      `https://${shop}/admin/api/2024-01/products/${req.params.id}.json`,
-      { product: { id: req.params.id, title } },
+      buildShopifyUrl(shop, `/admin/api/${SHOPIFY_API_VERSION}/products/${req.params.id}.json`),
+      { product: { id: req.params.id, title: title.trim() } },
       {
         headers: {
           'X-Shopify-Access-Token': accessToken,
@@ -152,14 +199,56 @@ app.put('/api/products/:id', async (req, res) => {
     );
 
     res.json({ success: true, product: response.data.product });
-
   } catch (err) {
     console.error('Update error:', err.message);
     res.status(500).json({ error: err.message });
   }
 });
 
-// ─── Serve main app ───
+app.get('/api/config', (_req, res) => {
+  res.json({ openaiConfigured: Boolean(OPENAI_API_KEY) });
+});
+
+app.post('/api/optimize-title', async (req, res) => {
+  const { title, sku } = req.body || {};
+
+  if (typeof title !== 'string' || !title.trim()) {
+    return res.status(400).json({ error: 'Product title is required' });
+  }
+
+  const prompt = `You are a Shopify SEO expert. Rewrite this product title: compelling, SEO-optimized, under 70 chars. Also suggest meta title (under 60 chars) and meta description (under 160 chars).
+Original: "${title.trim()}" SKU: "${typeof sku === 'string' ? sku.trim() : ''}"
+Respond ONLY in JSON: {"optimized_title":"...","meta_title":"...","meta_description":"...","keywords":["k1","k2","k3"]}`;
+
+  try {
+    const data = await generateJsonCompletion(prompt, 512);
+    res.json(data);
+  } catch (err) {
+    console.error('Optimize title error:', err.message);
+    res.status(err.status || 500).json({ error: err.message });
+  }
+});
+
+app.post('/api/suggest-tags', async (req, res) => {
+  const { title, count = 10 } = req.body || {};
+
+  if (typeof title !== 'string' || !title.trim()) {
+    return res.status(400).json({ error: 'Product title is required' });
+  }
+
+  const safeCount = Math.min(Math.max(Number(count) || 10, 1), 20);
+  const prompt = `Generate ${safeCount} highly relevant Shopify product tags for: "${title.trim()}". Tags should be specific searchable keywords.
+Respond ONLY in JSON: {"tags":["tag1","tag2",...]}`;
+
+  try {
+    const data = await generateJsonCompletion(prompt, 256);
+    res.json({ tags: Array.isArray(data.tags) ? data.tags : [] });
+  } catch (err) {
+    console.error('Suggest tags error:', err.message);
+    res.status(err.status || 500).json({ error: err.message });
+  }
+});
+
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
@@ -167,6 +256,7 @@ app.get('/', (req, res) => {
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`TitleBoost running at http://localhost:${PORT}`);
-  console.log(`Shopify API Key: ${SHOPIFY_API_KEY ? '✅' : '❌'}`);
+  console.log(`Shopify API Key: ${SHOPIFY_API_KEY ? 'yes' : 'missing'}`);
+  console.log(`OpenAI API Key: ${OPENAI_API_KEY ? 'yes' : 'missing'}`);
   console.log(`App URL: ${SHOPIFY_APP_URL}`);
 });
