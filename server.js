@@ -184,6 +184,12 @@ function verifyShopifyHmac(query) {
 function getSessionAuth(req, res) {
   let shop = normalizeShop(req.query.shop);
 
+  console.log('STORE:', readTokenStore());
+
+  if (!shop && req.session.shop) {
+    shop = req.session.shop;
+  }
+
   if (!shop) {
     const stored = getDefaultStoredShopAuth();
     if (stored) {
@@ -196,7 +202,14 @@ function getSessionAuth(req, res) {
     return null;
   }
 
-  const storedAuth = getStoredShopAuth(shop);
+  let storedAuth = getStoredShopAuth(shop);
+
+  if (!storedAuth && req.session.accessToken) {
+    storedAuth = {
+      shop,
+      accessToken: req.session.accessToken
+    };
+  }
 
   if (!storedAuth) {
     res.status(401).json({ error: 'Not authenticated' });
@@ -294,6 +307,7 @@ app.get('/auth/callback', async (req, res) => {
     req.session.host = host || null;
     req.session.embedded = Boolean(embedded);
     saveShopAuth(normalizedShop, tokenRes.data.access_token, host);
+    console.log('SAVED TOKEN:', normalizedShop);
     delete req.session.state;
 
     console.log(`Shop installed: ${normalizedShop}`);
