@@ -1276,6 +1276,96 @@
       box-shadow: 0 10px 24px rgba(17, 17, 17, .18), inset 0 0 0 1px rgba(255, 255, 255, .10)
     }
 
+    .billing-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 20px
+    }
+
+    .onboarding-brand {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 28px
+    }
+
+    .onboarding-brand .logo-icon {
+      width: 40px;
+      height: 40px;
+      font-size: 18px
+    }
+
+    .onboarding-brand .brand-name {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--text)
+    }
+
+    .change-plan-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px
+    }
+
+    body.onboarding-active {
+      background: linear-gradient(180deg, #f7f7fb 0%, #f1f1f1 100%)
+    }
+
+    body.onboarding-active .topbar,
+    body.onboarding-active .nav,
+    body.onboarding-active .usage,
+    body.onboarding-active .page {
+      display: none !important
+    }
+
+    body.onboarding-active .frame {
+      display: block;
+      min-height: 100vh
+    }
+
+    body.onboarding-active #page-billing {
+      display: block !important;
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 56px 32px 72px;
+      animation: none
+    }
+
+    body.onboarding-active #page-billing .billing-head {
+      display: block;
+      text-align: center;
+      margin-bottom: 28px
+    }
+
+    body.onboarding-active #page-billing .onboarding-brand {
+      display: flex
+    }
+
+    body.onboarding-active #page-billing .change-plan-btn,
+    body.onboarding-active #page-billing .billing-usage {
+      display: none !important
+    }
+
+    body.onboarding-active #page-billing .ptitle {
+      font-size: 34px;
+      margin-bottom: 8px
+    }
+
+    body.onboarding-active #page-billing .psub {
+      font-size: 16px
+    }
+
+    body.onboarding-active #page-billing .plan-grid {
+      align-items: stretch
+    }
+
+    body.onboarding-active #page-billing .plan-card.selected::after {
+      display: none
+    }
+
     .sgrp {
       background: var(--surface);
       border: 1px solid var(--border);
@@ -1736,11 +1826,16 @@
 
     <!-- PAGE: BILLING -->
     <div class="page active" id="page-billing">
-      <div class="ph">
+      <div class="onboarding-brand">
+        <div class="logo-icon">🛍</div>
+        <div class="brand-name">TitleBoost AI</div>
+      </div>
+      <div class="billing-head">
         <div>
-          <div class="ptitle">Billing &amp; Plans</div>
-          <div class="psub">Choose a plan to start using TitleBoost AI</div>
+          <div class="ptitle">Choose your plan to get started</div>
+          <div class="psub">Pick a plan to unlock TitleBoost AI for your Shopify store.</div>
         </div>
+        <button class="btn bs change-plan-btn" type="button" onclick="resetPlanSelection()">Change plan</button>
       </div>
       <div class="plan-grid">
         <div class="plan-card" id="freePlanCard" data-plan="free">
@@ -1751,7 +1846,7 @@
           <div class="plan-trial">Start instantly with no trial needed</div>
           <span class="badge bok" id="freePlanBadge">Current plan</span>
           <button class="btn bs" id="freePlanBtn" style="width:100%;margin-top:16px"
-            onclick="selectPlan('free')">Select Free plan</button>
+            onclick="selectPlan('free')">Select plan</button>
           <ul class="plan-features">
             <li>50 title optimizations each month</li>
             <li>Title Optimizer access only</li>
@@ -1766,7 +1861,7 @@
           <div class="plan-note">A practical plan for merchants who optimize products every week.</div>
           <div class="plan-trial">Includes a 7-day free trial</div>
           <button class="btn bm" id="proPlanBtn" style="width:100%;margin-top:16px"
-            onclick="selectPlan('pro')">Select Pro plan</button>
+            onclick="selectPlan('pro')">Select plan</button>
           <ul class="plan-features">
             <li>1000 title optimizations every month</li>
             <li>SEO Meta Editor and Tag Suggester</li>
@@ -1781,7 +1876,7 @@
           <div class="plan-note">Made for larger catalogs that need more automation every day.</div>
           <div class="plan-trial">Includes a 7-day free trial</div>
           <button class="btn bp" id="enterprisePlanBtn" style="width:100%;margin-top:16px"
-            onclick="selectPlan('enterprise')">Select Enterprise plan</button>
+            onclick="selectPlan('enterprise')">Select plan</button>
           <ul class="plan-features">
             <li>Unlimited title optimizations per month</li>
             <li>All AI tools unlocked</li>
@@ -1790,7 +1885,7 @@
           </ul>
         </div>
       </div>
-      <div class="sgrp">
+      <div class="sgrp billing-usage">
         <div class="sgh">
           <div class="sgt">Usage this month</div>
         </div>
@@ -2152,6 +2247,7 @@
   <script>
     const PRODUCTS = [];
     const SHOPIFY_CONFIG = window.__SHOPIFY_CONFIG__ || {};
+    const SELECTED_PLAN_KEY = 'selectedPlan';
 
     let sel = new Set(), apiReady = false, genRes = {}, filtered = [], stF = '', colF = '', curPg = 1, productsLoading = false;
     let curTagProd = null, genTags = [];
@@ -2160,7 +2256,7 @@
       pro: { name: 'Pro Plan', limit: 1000, toast: 'Pro plan selected. Your 7-day trial is ready.' },
       enterprise: { name: 'Enterprise Plan', limit: Infinity, toast: 'Enterprise plan selected. Your 7-day trial is ready.' }
     };
-    let currentPlan = (localStorage.getItem('tb_plan') || 'free').toLowerCase();
+    let currentPlan = (localStorage.getItem(SELECTED_PLAN_KEY) || localStorage.getItem('tb_plan') || 'free').toLowerCase();
 
     function cc(n) { return n <= 60 ? 'cok' : n <= 70 ? 'cwn' : 'cbd' }
     function escapeHtml(value) {
@@ -2683,7 +2779,7 @@
 
     // Load real Shopify products if available
     async function loadShopifyProducts() {
-      if (!planChosen) {
+      if (!hasSelectedPlan()) {
         PRODUCTS.length = 0;
         filtered = [];
         productsLoading = false;
@@ -2742,9 +2838,26 @@
       }
     }
 
-    currentPlan = (localStorage.getItem('tb_plan') || currentPlan || 'free').toLowerCase();
+    currentPlan = (localStorage.getItem(SELECTED_PLAN_KEY) || localStorage.getItem('tb_plan') || currentPlan || 'free').toLowerCase();
+
+    function hasSelectedPlan() {
+      return Boolean(localStorage.getItem(SELECTED_PLAN_KEY));
+    }
+
+    function getEffectivePlan() {
+      if (!hasSelectedPlan()) return 'free';
+      const stored = (localStorage.getItem(SELECTED_PLAN_KEY) || currentPlan || 'free').toLowerCase();
+      return PLAN_CONFIG[stored] ? stored : 'free';
+    }
+
+    function applyOnboardingMode() {
+      const onboarding = !hasSelectedPlan();
+      document.body.classList.toggle('onboarding-active', onboarding);
+      currentPlan = getEffectivePlan();
+    }
 
     function goto(page) {
+      if (!hasSelectedPlan() && page !== 'billing') page = 'billing';
       document.querySelectorAll('.ni').forEach(n => n.classList.remove('active'));
       document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
       const ni = document.querySelector(`.ni[onclick="goto('${page}')"]`);
@@ -2758,10 +2871,12 @@
     }
 
     function updatePlanUI() {
+      const onboarding = !hasSelectedPlan();
+      currentPlan = getEffectivePlan();
       const pill = document.getElementById('planPill');
-      if (pill) pill.textContent = (PLAN_CONFIG[currentPlan]?.name || 'Free Plan') + ' · GPT-4o';
+      if (pill) pill.textContent = onboarding ? 'Choose a Plan' : (PLAN_CONFIG[currentPlan]?.name || 'Free Plan') + ' · GPT-4o';
       const freeBadge = document.getElementById('freePlanBadge');
-      if (freeBadge) freeBadge.style.display = currentPlan === 'free' ? 'inline-flex' : 'none';
+      if (freeBadge) freeBadge.style.display = currentPlan === 'free' && !onboarding ? 'inline-flex' : 'none';
       const cardMap = {
         free: document.getElementById('freePlanCard'),
         pro: document.getElementById('proPlanCard'),
@@ -2779,18 +2894,33 @@
       });
       Object.entries(buttonMap).forEach(([plan, btn]) => {
         if (!btn) return;
-        btn.textContent = currentPlan === plan ? 'Selected' : 'Select ' + PLAN_CONFIG[plan].name.replace(' Plan', ' plan');
+        btn.textContent = onboarding ? 'Select plan' : (currentPlan === plan ? 'Current plan' : 'Select plan');
         btn.classList.toggle('plan-selected-btn', currentPlan === plan);
         btn.setAttribute('aria-pressed', currentPlan === plan ? 'true' : 'false');
+        btn.disabled = !onboarding && currentPlan === plan;
       });
     }
 
     function selectPlan(plan) {
       currentPlan = PLAN_CONFIG[plan] ? plan : 'free';
+      localStorage.setItem(SELECTED_PLAN_KEY, currentPlan);
       localStorage.setItem('tb_plan', currentPlan);
+      applyOnboardingMode();
       updatePlanUI();
       updateStats();
-      showToast(PLAN_CONFIG[currentPlan].toast, currentPlan === 'free' ? 'ok' : 'def');
+      showToast(`Welcome to TitleBoost AI! You're on the ${PLAN_CONFIG[currentPlan].name}.`, currentPlan === 'free' ? 'ok' : 'def');
+      if (!PRODUCTS.length) loadShopifyProducts();
+      goto('title');
+    }
+
+    function resetPlanSelection() {
+      localStorage.removeItem(SELECTED_PLAN_KEY);
+      currentPlan = 'free';
+      localStorage.setItem('tb_plan', 'free');
+      applyOnboardingMode();
+      updatePlanUI();
+      updateStats();
+      goto('billing');
     }
 
     function bindPlanButtons() {
@@ -2919,9 +3049,11 @@
     }
 
     bindPlanButtons();
+    applyOnboardingMode();
     updatePlanUI();
     testAPIKey();
-    loadShopifyProducts();
+    if (hasSelectedPlan()) loadShopifyProducts();
+    else goto('billing');
     updateStats();
     renderTable();
   </script>
