@@ -160,6 +160,12 @@
       font-weight: 500
     }
 
+    .ni.disabled {
+      opacity: .45;
+      cursor: not-allowed;
+      pointer-events: none
+    }
+
     .nsep {
       height: 1px;
       background: var(--border);
@@ -2734,9 +2740,46 @@
       }
     }
 
-    currentPlan = (localStorage.getItem('tb_plan') || currentPlan || 'free').toLowerCase();
+    const USER_PLAN_KEY = 'user_plan';
+    currentPlan = (localStorage.getItem(USER_PLAN_KEY) || localStorage.getItem('tb_plan') || currentPlan || 'free').toLowerCase();
+
+    function hasUserPlan() {
+      return Boolean(localStorage.getItem(USER_PLAN_KEY));
+    }
+
+    function getUserPlan() {
+      const storedPlan = (localStorage.getItem(USER_PLAN_KEY) || 'free').toLowerCase();
+      return PLAN_CONFIG[storedPlan] ? storedPlan : 'free';
+    }
+
+    function setNavigationLocked(locked) {
+      document.querySelectorAll('.ni').forEach((item) => {
+        const target = item.getAttribute('onclick') || '';
+        if (target.includes("goto('billing')")) {
+          item.classList.remove('disabled');
+          item.setAttribute('aria-disabled', 'false');
+          return;
+        }
+        item.classList.toggle('disabled', locked);
+        item.setAttribute('aria-disabled', locked ? 'true' : 'false');
+      });
+    }
+
+    function checkPlan() {
+      const locked = !hasUserPlan();
+      currentPlan = locked ? 'free' : getUserPlan();
+      localStorage.setItem('tb_plan', currentPlan);
+      setNavigationLocked(locked);
+      updatePlanUI();
+      goto(locked ? 'billing' : 'title');
+      if (!locked) loadShopifyProducts();
+    }
 
     function goto(page) {
+      if (!hasUserPlan() && page !== 'billing') {
+        showToast('Please select a plan first', 'err');
+        page = 'billing';
+      }
       document.querySelectorAll('.ni').forEach(n => n.classList.remove('active'));
       document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
       const ni = document.querySelector(`.ni[onclick="goto('${page}')"]`);
@@ -2751,7 +2794,7 @@
 
     function updatePlanUI() {
       const pill = document.getElementById('planPill');
-      if (pill) pill.textContent = (PLAN_CONFIG[currentPlan]?.name || 'Free Plan') + ' · GPT-4o';
+      if (pill) pill.textContent = hasUserPlan() ? (PLAN_CONFIG[currentPlan]?.name || 'Free Plan') + ' · GPT-4o' : 'Choose a Plan';
       const freeBadge = document.getElementById('freePlanBadge');
       if (freeBadge) freeBadge.style.display = currentPlan === 'free' ? 'inline-flex' : 'none';
       const cardMap = {
@@ -2778,12 +2821,29 @@
       });
     }
 
-    function selectPlan(plan) {
+    async function selectPlan(plan) {
       currentPlan = PLAN_CONFIG[plan] ? plan : 'free';
+      try {
+        const response = await fetch('/api/select-plan', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ plan: currentPlan })
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Could not save plan');
+      } catch (error) {
+        showToast('Plan save failed: ' + error.message, 'err');
+        return;
+      }
+
+      localStorage.setItem(USER_PLAN_KEY, currentPlan);
       localStorage.setItem('tb_plan', currentPlan);
+      setNavigationLocked(false);
       updatePlanUI();
       updateStats();
-      showToast(PLAN_CONFIG[currentPlan].toast, currentPlan === 'free' ? 'ok' : 'def');
+      goto('title');
+      showToast(`Welcome to TitleBoost AI! You're on the ${PLAN_CONFIG[currentPlan].name}.`, currentPlan === 'free' ? 'ok' : 'def');
+      loadShopifyProducts();
     }
 
     function bindPlanButtons() {
@@ -2853,6 +2913,14 @@
     }
 
     async function loadShopifyProducts() {
+      if (!hasUserPlan()) {
+        PRODUCTS.length = 0;
+        filtered = [];
+        productsLoading = false;
+        updateStats();
+        renderTable();
+        return;
+      }
       const shop = getShopFromUrl();
       productsLoading = true;
       renderTable();
@@ -2907,8 +2975,7 @@
     bindPlanButtons();
     updatePlanUI();
     testAPIKey();
-    goto('billing');
-    loadShopifyProducts();
+    checkPlan();
     updateStats();
     renderTable();
   </script>

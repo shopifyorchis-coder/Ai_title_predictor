@@ -64,12 +64,36 @@ function writeTokenStore(store) {
 
 function saveShopAuth(shop, accessToken, host) {
   const store = readTokenStore();
+  const existing = store[shop] || {};
   store[shop] = {
+    ...existing,
     accessToken,
     host: host || '',
     updatedAt: new Date().toISOString()
   };
   writeTokenStore(store);
+}
+
+function saveShopPlan(shop, plan) {
+  const normalizedShop = normalizeShop(shop);
+  if (!normalizedShop) return false;
+
+  const store = readTokenStore();
+  const existing = store[normalizedShop] || {};
+  store[normalizedShop] = {
+    ...existing,
+    plan,
+    updatedAt: new Date().toISOString()
+  };
+  writeTokenStore(store);
+  return true;
+}
+
+function getStoredShopPlan(shop) {
+  const normalizedShop = normalizeShop(shop);
+  if (!normalizedShop) return null;
+  const plan = readTokenStore()[normalizedShop]?.plan;
+  return typeof plan === 'string' ? plan : null;
 }
 
 function getStoredShopAuth(shop) {
@@ -183,6 +207,20 @@ function getSessionAuth(req, res) {
   return { shop: storedAuth.shop, accessToken: storedAuth.accessToken };
 }
 
+function requirePlanSelection(req, res, next) {
+  const auth = getSessionAuth(req, res);
+  if (!auth) return;
+
+  const plan = getStoredShopPlan(auth.shop);
+  if (!plan) {
+    res.status(403).json({ error: 'Plan required' });
+    return;
+  }
+
+  req.shopAuth = { ...auth, plan };
+  next();
+}
+
 async function generateJsonCompletion(prompt, maxTokens = 512) {
   if (!OPENAI_API_KEY) {
     const error = new Error('OpenAI API key is not configured on the server');
@@ -264,10 +302,8 @@ app.get('/auth/callback', async (req, res) => {
   }
 });
 
-app.get('/api/products', async (req, res) => {
-  const auth = getSessionAuth(req, res);
-  if (!auth) return;
-  const { shop, accessToken } = auth;
+app.get('/api/products', requirePlanSelection, async (req, res) => {
+  const { shop, accessToken } = req.shopAuth;
 
   try {
     const response = await axios.get(
@@ -297,10 +333,8 @@ app.get('/api/products', async (req, res) => {
   }
 });
 
-app.put('/api/products/:id', async (req, res) => {
-  const auth = getSessionAuth(req, res);
-  if (!auth) return;
-  const { shop, accessToken } = auth;
+app.put('/api/products/:id', requirePlanSelection, async (req, res) => {
+  const { shop, accessToken } = req.shopAuth;
   const { title } = req.body || {};
 
   if (typeof title !== 'string' || !title.trim()) {
@@ -334,11 +368,25 @@ app.get('/api/config', (req, res) => {
     openaiConfigured: Boolean(OPENAI_API_KEY),
     shopifyApiKey: SHOPIFY_API_KEY || '',
     host: normalizeHost(req.query.host || req.session.host || storedAuth?.host) || '',
-    shop: shop || ''
+    shop: shop || '',
+    plan: shop ? getStoredShopPlan(shop) || '' : ''
   });
 });
 
-app.post('/api/optimize-title', async (req, res) => {
+app.post('/api/select-plan', (req, res) => {
+  const auth = getSessionAuth(req, res);
+  if (!auth) return;
+
+  const { plan } = req.body || {};
+  if (!['free', 'pro', 'enterprise'].includes(plan)) {
+    return res.status(400).json({ error: 'Invalid plan' });
+  }
+
+  saveShopPlan(auth.shop, plan);
+  res.json({ success: true, shop: auth.shop, plan });
+});
+
+app.post('/api/optimize-title', requirePlanSelection, async (req, res) => {
   const { title, sku } = req.body || {};
 
   if (typeof title !== 'string' || !title.trim()) {
@@ -358,7 +406,7 @@ Respond ONLY in JSON: {"optimized_title":"...","meta_title":"...","meta_descript
   }
 });
 
-app.post('/api/suggest-tags', async (req, res) => {
+app.post('/api/suggest-tags', requirePlanSelection, async (req, res) => {
   const { title, count = 10 } = req.body || {};
 
   if (typeof title !== 'string' || !title.trim()) {
