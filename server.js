@@ -182,7 +182,7 @@ function verifyShopifyHmac(query) {
 }
 
 function getSessionAuth(req, res) {
-  const shop = normalizeShop(req.query.shop || req.session.shop);
+  const shop = normalizeShop(req.query.shop || req.body?.shop || req.session.shop);
   const accessToken = req.session.accessToken;
 
   if (!shop) {

@@ -2823,11 +2823,12 @@
 
     async function selectPlan(plan) {
       currentPlan = PLAN_CONFIG[plan] ? plan : 'free';
+      const shop = getShopFromUrl();
       try {
         const response = await fetch('/api/select-plan', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ plan: currentPlan })
+          body: JSON.stringify({ plan: currentPlan, shop })
         });
         const data = await response.json();
         if (!response.ok) throw new Error(data.error || 'Could not save plan');
