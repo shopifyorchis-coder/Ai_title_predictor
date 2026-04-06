@@ -1276,6 +1276,67 @@
       box-shadow: 0 10px 24px rgba(17, 17, 17, .18), inset 0 0 0 1px rgba(255, 255, 255, .10)
     }
 
+    .app-shell {
+      display: block
+    }
+
+    .onboarding-screen {
+      min-height: 100vh;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 24px;
+      background: linear-gradient(180deg, #f8f8fb 0%, #efeff4 100%)
+    }
+
+    .onboarding-screen.active {
+      display: flex
+    }
+
+    .onboarding-wrap {
+      width: min(1180px, 100%);
+      margin: 0 auto
+    }
+
+    .onboarding-header {
+      text-align: center;
+      margin-bottom: 32px
+    }
+
+    .onboarding-logo {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 18px
+    }
+
+    .onboarding-logo .logo-icon {
+      width: 42px;
+      height: 42px;
+      font-size: 18px
+    }
+
+    .onboarding-logo .brand-text {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--text)
+    }
+
+    .onboarding-title {
+      font-size: 34px;
+      font-weight: 700;
+      margin-bottom: 10px
+    }
+
+    .onboarding-subtitle {
+      font-size: 16px;
+      color: var(--t2)
+    }
+
+    .onboarding-screen .plan-grid {
+      margin-bottom: 0
+    }
+
 
     .sgrp {
       background: var(--surface);
@@ -1489,6 +1550,63 @@
 </head>
 
 <body>
+  <div class="onboarding-screen" id="onboardingScreen">
+    <div class="onboarding-wrap">
+      <div class="onboarding-header">
+        <div class="onboarding-logo">
+          <div class="logo-icon">🛍</div>
+          <div class="brand-text">TitleBoost AI</div>
+        </div>
+        <div class="onboarding-title">Choose your plan to get started</div>
+        <div class="onboarding-subtitle">Select a plan to unlock your Shopify optimization dashboard.</div>
+      </div>
+      <div class="plan-grid">
+        <div class="plan-card selected" data-onboarding-plan="free">
+          <div class="plan-tag">Free forever</div>
+          <div class="card-title">Free</div>
+          <div class="plan-price">$0 <span>/month</span></div>
+          <div class="plan-note">A simple starting point for testing the app on your store.</div>
+          <div class="plan-trial">Start instantly with no trial needed</div>
+          <button class="btn bs" type="button" style="width:100%;margin-top:16px" data-plan-select="free">Select Free plan</button>
+          <ul class="plan-features">
+            <li>50 title optimizations each month</li>
+            <li>Title Optimizer access only</li>
+            <li>Basic reports and SEO score</li>
+            <li>Built for single-store testing</li>
+          </ul>
+        </div>
+        <div class="plan-card featured" data-onboarding-plan="pro">
+          <div class="plan-tag">Most popular</div>
+          <div class="card-title">Pro</div>
+          <div class="plan-price">$9.99 <span>/month</span></div>
+          <div class="plan-note">A practical plan for merchants who optimize products every week.</div>
+          <div class="plan-trial">Includes a 7-day free trial</div>
+          <button class="btn bm" type="button" style="width:100%;margin-top:16px" data-plan-select="pro">Select Pro plan</button>
+          <ul class="plan-features">
+            <li>1000 title optimizations every month</li>
+            <li>SEO Meta Editor and Tag Suggester</li>
+            <li>Full reports and SEO score</li>
+            <li>Great fit for growing Shopify stores</li>
+          </ul>
+        </div>
+        <div class="plan-card" data-onboarding-plan="enterprise">
+          <div class="plan-tag">Scale up</div>
+          <div class="card-title">Enterprise</div>
+          <div class="plan-price">$29.99 <span>/month</span></div>
+          <div class="plan-note">Made for larger catalogs that need more automation every day.</div>
+          <div class="plan-trial">Includes a 7-day free trial</div>
+          <button class="btn bp" type="button" style="width:100%;margin-top:16px" data-plan-select="enterprise">Select Enterprise plan</button>
+          <ul class="plan-features">
+            <li>Unlimited title optimizations per month</li>
+            <li>All AI tools unlocked</li>
+            <li>Full reports and SEO score</li>
+            <li>Best for teams with bigger product catalogs</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="app-shell" id="appShell">
   <header class="topbar">
     <div class="logo">
       <div class="logo-icon">🛍</div>TitleBoost AI
@@ -1740,8 +1858,9 @@
       <div class="ph">
         <div>
           <div class="ptitle">Billing &amp; Plans</div>
-          <div class="psub">Choose a plan to start using TitleBoost AI</div>
+          <div class="psub">Manage your current plan and monthly usage</div>
         </div>
+        <button class="btn bs" type="button" onclick="resetPlanSelection()">Change plan</button>
       </div>
       <div class="plan-grid">
         <div class="plan-card" id="freePlanCard" data-plan="free">
@@ -2735,7 +2854,44 @@
       }
     }
 
-    currentPlan = (localStorage.getItem('tb_plan') || currentPlan || 'free').toLowerCase();
+    const DASHBOARD_PLAN_KEY = 'titleboost_plan';
+    currentPlan = (localStorage.getItem(DASHBOARD_PLAN_KEY) || localStorage.getItem('tb_plan') || currentPlan || 'free').toLowerCase();
+
+    function hasPlanSelection() {
+      return Boolean(localStorage.getItem(DASHBOARD_PLAN_KEY));
+    }
+
+    function showOnboarding() {
+      const onboarding = document.getElementById('onboardingScreen');
+      const shell = document.getElementById('appShell');
+      if (onboarding) onboarding.classList.add('active');
+      if (shell) shell.style.display = 'none';
+      currentPlan = 'free';
+      updatePlanUI();
+      document.querySelectorAll('#onboardingScreen [data-onboarding-plan]').forEach((card) => {
+        card.classList.toggle('selected', card.getAttribute('data-onboarding-plan') === 'free');
+      });
+    }
+
+    function showDashboard() {
+      const onboarding = document.getElementById('onboardingScreen');
+      const shell = document.getElementById('appShell');
+      if (onboarding) onboarding.classList.remove('active');
+      if (shell) shell.style.display = 'block';
+    }
+
+    function checkPlan() {
+      currentPlan = (localStorage.getItem(DASHBOARD_PLAN_KEY) || 'free').toLowerCase();
+      if (PLAN_CONFIG[currentPlan] == null) currentPlan = 'free';
+      localStorage.setItem('tb_plan', currentPlan);
+      if (!hasPlanSelection()) {
+        showOnboarding();
+        return;
+      }
+      showDashboard();
+      updatePlanUI();
+      goto('title');
+    }
 
     function goto(page) {
       document.querySelectorAll('.ni').forEach(n => n.classList.remove('active'));
@@ -2777,14 +2933,28 @@
         btn.setAttribute('aria-pressed', currentPlan === plan ? 'true' : 'false');
         btn.disabled = false;
       });
+      document.querySelectorAll('#onboardingScreen [data-onboarding-plan]').forEach((card) => {
+        card.classList.toggle('selected', card.getAttribute('data-onboarding-plan') === currentPlan);
+      });
     }
 
     function selectPlan(plan) {
       currentPlan = PLAN_CONFIG[plan] ? plan : 'free';
+      localStorage.setItem(DASHBOARD_PLAN_KEY, currentPlan);
       localStorage.setItem('tb_plan', currentPlan);
+      showDashboard();
       updatePlanUI();
       updateStats();
-      showToast(PLAN_CONFIG[currentPlan].toast, currentPlan === 'free' ? 'ok' : 'def');
+      showToast(`Welcome to TitleBoost AI! You are on the ${PLAN_CONFIG[currentPlan].name}.`, currentPlan === 'free' ? 'ok' : 'def');
+      goto('title');
+      loadShopifyProducts();
+    }
+
+    function resetPlanSelection() {
+      localStorage.removeItem(DASHBOARD_PLAN_KEY);
+      currentPlan = 'free';
+      localStorage.setItem('tb_plan', currentPlan);
+      showOnboarding();
     }
 
     function bindPlanButtons() {
@@ -2803,12 +2973,15 @@
         };
       });
 
-      const cards = document.querySelectorAll('#page-billing .plan-card[data-plan]');
-      cards.forEach((card) => {
-        const plan = card.getAttribute('data-plan');
+      const onboardingButtons = document.querySelectorAll('#onboardingScreen [data-plan-select]');
+      onboardingButtons.forEach((btn) => {
+        const plan = btn.getAttribute('data-plan-select');
         if (!plan) return;
-        card.style.cursor = 'pointer';
-        card.addEventListener('click', () => selectPlan(plan));
+        btn.addEventListener('click', (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          selectPlan(plan);
+        });
       });
     }
 
@@ -2913,12 +3086,13 @@
     }
 
     bindPlanButtons();
-    updatePlanUI();
+    checkPlan();
     testAPIKey();
-    loadShopifyProducts();
+    if (hasPlanSelection()) loadShopifyProducts();
     updateStats();
     renderTable();
   </script>
+  </div>
 </body>
 
 </html>
