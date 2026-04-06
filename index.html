@@ -1493,7 +1493,7 @@
       <div class="logo-icon">🛍</div>TitleBoost AI
     </div>
     <div class="tdiv"></div>
-    <div class="tstore" id="storeName">demo-store.myshopify.com</div>
+    <div class="tstore" id="storeName">Connecting store...</div>
     <div class="tsp"></div>
     <div class="tpill" id="planPill">Free Plan · GPT-4o</div>
   </header>
@@ -2184,8 +2184,12 @@
     function getShopFromUrl() {
       const urlParams = new URLSearchParams(window.location.search);
       const shop = (urlParams.get('shop') || SHOPIFY_CONFIG.shop || '').trim().toLowerCase();
-      if (shop) localStorage.setItem('titleboost_shop', shop);
-      return shop || localStorage.getItem('titleboost_shop') || '';
+      if (shop) {
+        localStorage.setItem('titleboost_shop', shop);
+        return shop;
+      }
+      const storedShop = (localStorage.getItem('titleboost_shop') || '').trim().toLowerCase();
+      return storedShop === 'demo-store.myshopify.com' ? '' : storedShop;
     }
     function getHostParam() {
       const urlParams = new URLSearchParams(window.location.search);
@@ -2633,6 +2637,15 @@
         const r = await fetch('/api/config');
         const data = await r.json();
         apiReady = Boolean(data.openaiConfigured);
+        if (data.shop) {
+          SHOPIFY_CONFIG.shop = data.shop;
+          localStorage.setItem('titleboost_shop', data.shop);
+          document.getElementById('storeName').textContent = data.shop;
+        }
+        if (data.host) {
+          SHOPIFY_CONFIG.host = data.host;
+          localStorage.setItem('titleboost_host', data.host);
+        }
         renderAPIKeys();
         if (apiReady) showToast('Server-side OpenAI connection is ready.', 'ok');
         else showToast('OPENAI_API_KEY is missing on the server.', 'err');

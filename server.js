@@ -86,6 +86,13 @@ function getStoredShopAuth(shop) {
   };
 }
 
+function getDefaultStoredShopAuth() {
+  const store = readTokenStore();
+  const shops = Object.keys(store).filter((shop) => store[shop]?.accessToken);
+  if (shops.length !== 1) return null;
+  return getStoredShopAuth(shops[0]);
+}
+
 function normalizeHost(host) {
   if (typeof host !== 'string') return null;
   const normalized = host.trim();
@@ -101,8 +108,9 @@ function buildAppRedirectQuery(params) {
 }
 
 function renderEmbeddedHtml(req) {
-  const shop = normalizeShop(req.query.shop || req.session.shop);
-  const storedAuth = shop ? getStoredShopAuth(shop) : null;
+  const requestedShop = normalizeShop(req.query.shop || req.session.shop);
+  const storedAuth = requestedShop ? getStoredShopAuth(requestedShop) : getDefaultStoredShopAuth();
+  const shop = requestedShop || storedAuth?.shop || null;
   const host = normalizeHost(req.query.host || req.session.host || storedAuth?.host);
   const embedded = typeof req.query.embedded === 'string'
     ? req.query.embedded
@@ -319,8 +327,9 @@ app.put('/api/products/:id', async (req, res) => {
 });
 
 app.get('/api/config', (req, res) => {
-  const shop = normalizeShop(req.query.shop || req.session.shop);
-  const storedAuth = shop ? getStoredShopAuth(shop) : null;
+  const requestedShop = normalizeShop(req.query.shop || req.session.shop);
+  const storedAuth = requestedShop ? getStoredShopAuth(requestedShop) : getDefaultStoredShopAuth();
+  const shop = requestedShop || storedAuth?.shop || '';
   res.json({
     openaiConfigured: Boolean(OPENAI_API_KEY),
     shopifyApiKey: SHOPIFY_API_KEY || '',
