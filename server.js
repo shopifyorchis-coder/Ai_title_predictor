@@ -182,29 +182,24 @@ function verifyShopifyHmac(query) {
 }
 
 function getSessionAuth(req, res) {
-  const shop = normalizeShop(req.query.shop || req.body?.shop || req.session.shop);
-  const accessToken = req.session.accessToken;
+  const shop = normalizeShop(req.query.shop);
 
   if (!shop) {
-    res.status(401).json({ error: 'Not authenticated' });
+    res.status(401).json({ error: 'Missing shop' });
     return null;
   }
 
-  if (accessToken && shop === req.session.shop) {
-    return { shop, accessToken };
-  }
-
   const storedAuth = getStoredShopAuth(shop);
+
   if (!storedAuth) {
     res.status(401).json({ error: 'Not authenticated' });
     return null;
   }
 
-  req.session.shop = storedAuth.shop;
-  req.session.accessToken = storedAuth.accessToken;
-  req.session.host = storedAuth.host;
-
-  return { shop: storedAuth.shop, accessToken: storedAuth.accessToken };
+  return {
+    shop: storedAuth.shop,
+    accessToken: storedAuth.accessToken
+  };
 }
 
 function requirePlanSelection(req, res, next) {
@@ -383,7 +378,7 @@ app.post('/api/select-plan', (req, res) => {
   }
 
   saveShopPlan(auth.shop, plan);
-  res.json({ success: true, shop: auth.shop, plan });
+  res.json({ success: true });
 });
 
 app.post('/api/optimize-title', requirePlanSelection, async (req, res) => {

@@ -2823,12 +2823,17 @@
 
     async function selectPlan(plan) {
       currentPlan = PLAN_CONFIG[plan] ? plan : 'free';
-      const shop = getShopFromUrl();
+      const shop = new URLSearchParams(window.location.search).get('shop') || getShopFromUrl();
+      if (!shop) {
+        showToast('Store not found. Reconnecting Shopify...', 'err');
+        window.location.href = '/auth';
+        return;
+      }
       try {
-        const response = await fetch('/api/select-plan', {
+        const response = await fetch(`/api/select-plan?shop=${encodeURIComponent(shop)}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ plan: currentPlan, shop })
+          body: JSON.stringify({ plan: currentPlan })
         });
         const data = await response.json();
         if (!response.ok) throw new Error(data.error || 'Could not save plan');
