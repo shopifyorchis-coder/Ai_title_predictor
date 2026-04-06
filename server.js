@@ -182,7 +182,14 @@ function verifyShopifyHmac(query) {
 }
 
 function getSessionAuth(req, res) {
-  const shop = normalizeShop(req.query.shop);
+  let shop = normalizeShop(req.query.shop);
+
+  if (!shop) {
+    const stored = getDefaultStoredShopAuth();
+    if (stored) {
+      shop = stored.shop;
+    }
+  }
 
   if (!shop) {
     res.status(401).json({ error: 'Missing shop' });
@@ -369,6 +376,7 @@ app.get('/api/config', (req, res) => {
 });
 
 app.post('/api/select-plan', (req, res) => {
+  console.log('QUERY SHOP:', req.query.shop);
   const auth = getSessionAuth(req, res);
   if (!auth) return;
 
