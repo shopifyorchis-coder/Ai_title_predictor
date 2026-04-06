@@ -2711,7 +2711,23 @@
       updatePlanUI();
       updateStats();
       showToast(PLAN_CONFIG[currentPlan].toast, currentPlan === 'free' ? 'ok' : 'def');
-      goto('title');
+    }
+
+    function bindPlanButtons() {
+      const buttons = [
+        { id: 'freePlanBtn', plan: 'free' },
+        { id: 'proPlanBtn', plan: 'pro' },
+        { id: 'enterprisePlanBtn', plan: 'enterprise' }
+      ];
+      buttons.forEach(({ id, plan }) => {
+        const btn = document.getElementById(id);
+        if (!btn) return;
+        btn.onclick = (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          selectPlan(plan);
+        };
+      });
     }
 
     function openOptModal() { if (!sel.size) return; showOptModal(PRODUCTS.filter(p => sel.has(p.id))) }
@@ -2814,6 +2830,7 @@
       }
     }
 
+    bindPlanButtons();
     updatePlanUI();
     testAPIKey();
     loadShopifyProducts();
