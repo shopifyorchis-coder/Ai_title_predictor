@@ -14,7 +14,6 @@ app.set('trust proxy', 1);
 app.use(express.json());
 app.use(cookieParser());
 app.use(session({
-  store: sessionStore,
   secret: process.env.SHOPIFY_API_SECRET,
   resave: false,
   saveUninitialized: false,
@@ -38,74 +37,6 @@ const SHOPIFY_API_VERSION = '2024-01';
 const SHOP_DOMAIN_REGEX = /^[a-z0-9][a-z0-9-]*\.myshopify\.com$/;
 const INDEX_HTML = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
 const TOKENS_PATH = path.join(__dirname, 'shop_tokens.json');
-const SESSIONS_PATH = path.join(__dirname, 'sessions.json');
-
-class FileSessionStore extends session.Store {
-  constructor(filePath) {
-    super();
-    this.filePath = filePath;
-  }
-
-  readStore() {
-    try {
-      if (!fs.existsSync(this.filePath)) return {};
-      return JSON.parse(fs.readFileSync(this.filePath, 'utf8'));
-    } catch (error) {
-      console.error('Session store read error:', error.message);
-      return {};
-    }
-  }
-
-  writeStore(store) {
-    fs.writeFileSync(this.filePath, JSON.stringify(store, null, 2));
-  }
-
-  pruneExpiredSessions(store) {
-    const now = Date.now();
-    let changed = false;
-
-    Object.entries(store).forEach(([sid, record]) => {
-      const expiresAt = record?.cookie?.expires ? new Date(record.cookie.expires).getTime() : null;
-      if (expiresAt && expiresAt <= now) {
-        delete store[sid];
-        changed = true;
-      }
-    });
-
-    return changed;
-  }
-
-  get(sid, callback) {
-    const store = this.readStore();
-    if (this.pruneExpiredSessions(store)) this.writeStore(store);
-    callback(null, store[sid] || null);
-  }
-
-  set(sid, sessionData, callback) {
-    const store = this.readStore();
-    store[sid] = sessionData;
-    this.writeStore(store);
-    callback?.(null);
-  }
-
-  destroy(sid, callback) {
-    const store = this.readStore();
-    delete store[sid];
-    this.writeStore(store);
-    callback?.(null);
-  }
-
-  touch(sid, sessionData, callback) {
-    const store = this.readStore();
-    if (store[sid]) {
-      store[sid].cookie = sessionData.cookie;
-      this.writeStore(store);
-    }
-    callback?.(null);
-  }
-}
-
-const sessionStore = new FileSessionStore(SESSIONS_PATH);
 
 function normalizeShop(shop) {
   if (typeof shop !== 'string') return null;
