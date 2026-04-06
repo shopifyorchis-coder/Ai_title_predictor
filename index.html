@@ -1304,6 +1304,12 @@
       color: var(--text)
     }
 
+    .change-plan-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px
+    }
+
     body.onboarding-mode {
       background: linear-gradient(180deg, #f8f8fb 0%, #efeff4 100%)
     }
@@ -1337,6 +1343,7 @@
       display: flex
     }
 
+    body.onboarding-mode #page-billing .change-plan-btn,
     body.onboarding-mode #page-billing .sgrp {
       display: none
     }
@@ -1819,6 +1826,7 @@
           <div class="ptitle">Choose your plan to get started</div>
           <div class="psub">Select a plan before using any TitleBoost AI features.</div>
         </div>
+        <button class="btn bs change-plan-btn" type="button" onclick="resetPlanSelection()">Change plan</button>
       </div>
       <div class="plan-grid">
         <div class="plan-card" id="freePlanCard" data-plan="free">
@@ -2916,6 +2924,19 @@
       goto('title');
       showToast(`Welcome to TitleBoost AI! You are on the ${PLAN_CONFIG[currentPlan].name}.`, currentPlan === 'free' ? 'ok' : 'def');
       refreshDashboardAfterPlanUnlock();
+    }
+
+    function resetPlanSelection() {
+      localStorage.removeItem(PLAN_ACCESS_KEY);
+      currentPlan = 'free';
+      localStorage.setItem('tb_plan', currentPlan);
+      PRODUCTS.length = 0;
+      filtered = [];
+      sel.clear();
+      productsLoading = false;
+      showBillingGate();
+      updateStats();
+      renderTable();
     }
 
     function bindPlanButtons() {
