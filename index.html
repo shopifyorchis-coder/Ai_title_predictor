@@ -1144,7 +1144,9 @@
       box-shadow: var(--sh);
       display: flex;
       flex-direction: column;
-      min-height: 100%
+      min-height: 100%;
+      position: relative;
+      z-index: 1
     }
 
     .plan-card.featured {
@@ -1219,6 +1221,12 @@
       top: 0;
       color: var(--okt);
       font-weight: 700
+    }
+
+    .plan-card .btn {
+      position: relative;
+      z-index: 3;
+      pointer-events: auto
     }
 
     .sgrp {
@@ -1688,7 +1696,7 @@
         </div>
       </div>
       <div class="plan-grid">
-        <div class="plan-card">
+        <div class="plan-card" id="freePlanCard" data-plan="free">
           <div class="plan-tag">Free forever</div>
           <div class="card-title">Free</div>
           <div class="plan-price">$0 <span>/month</span></div>
@@ -1704,7 +1712,7 @@
             <li>Built for single-store testing</li>
           </ul>
         </div>
-        <div class="plan-card featured">
+        <div class="plan-card featured" id="proPlanCard" data-plan="pro">
           <div class="plan-tag">Most popular</div>
           <div class="card-title">Pro</div>
           <div class="plan-price">$9.99 <span>/month</span></div>
@@ -1719,7 +1727,7 @@
             <li>Great fit for growing Shopify stores</li>
           </ul>
         </div>
-        <div class="plan-card">
+        <div class="plan-card" id="enterprisePlanCard" data-plan="enterprise">
           <div class="plan-tag">Scale up</div>
           <div class="card-title">Enterprise</div>
           <div class="plan-price">$29.99 <span>/month</span></div>
@@ -2727,6 +2735,14 @@
           event.stopPropagation();
           selectPlan(plan);
         };
+      });
+
+      const cards = document.querySelectorAll('#page-billing .plan-card[data-plan]');
+      cards.forEach((card) => {
+        const plan = card.getAttribute('data-plan');
+        if (!plan) return;
+        card.style.cursor = 'pointer';
+        card.addEventListener('click', () => selectPlan(plan));
       });
     }
 
